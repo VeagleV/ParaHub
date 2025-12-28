@@ -1,5 +1,6 @@
 package org.bin.parahub.mapper;
 
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.TerrainPointDTO;
 import org.bin.parahub.entity.TerrainPoint;
 import org.springframework.stereotype.Component;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Profiled(logArgs = true, logResult = false, slowThresholdMs = 50)
 public class TerrainPointMapper {
 
     public TerrainPoint toEntity(TerrainPointDTO dto){

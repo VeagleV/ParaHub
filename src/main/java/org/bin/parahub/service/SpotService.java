@@ -3,6 +3,7 @@ package org.bin.parahub.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.SpotDTO;
 import org.bin.parahub.exception.SpotNotFoundException;
 import org.bin.parahub.mapper.SpotMapper;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Profiled
 public class SpotService {
 
     private final SpotRepository spotRepository;

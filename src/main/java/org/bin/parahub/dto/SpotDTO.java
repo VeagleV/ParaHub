@@ -2,6 +2,7 @@ package org.bin.parahub.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.ToString;
 import java.util.List;
 
 /**
@@ -12,6 +13,7 @@ import java.util.List;
  * DTO для Spot, чтобы инкапсулировать фронт от самой сущности
  */
 @Data
+@ToString
 public class SpotDTO {
 
     private Long id;
