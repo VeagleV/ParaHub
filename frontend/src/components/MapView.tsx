@@ -146,8 +146,8 @@ const MapView: React.FC = () => {
             const savedSpot = await createSpot(data);
 
             setSpots([...spots, savedSpot]);
-            setModalOpen(false);
             setSpotFormOpen(false); // Close the spot form modal
+            setModalOpen(false); // Also close the legacy modal state
             setNewSpot(null);
             showToast("Старт успешно добавлен!", "success");
         } catch (err) {
