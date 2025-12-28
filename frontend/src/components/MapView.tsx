@@ -38,16 +38,16 @@ const TERRAIN_COLORS = {
 } as const;
 
 const TERRAIN_ICONS = {
-    TAKEOFF: 'fa-plane-departure',
+    TAKEOFF:  'fa-plane-departure',
     LANDING_ZONE: 'fa-plane-arrival',
-    BEACON: 'fa-location-dot',
-    LANDMARK:  'fa-mountain',
+    BEACON:  'fa-location-dot',
+    LANDMARK:   'fa-mountain',
 } as const;
 
 
 // Эмодзи для типов (для легенды)
 const TERRAIN_EMOJI = {
-    TAKEOFF:  '🛫',
+    TAKEOFF:   '🛫',
     LANDING_ZONE: '🛬',
     BEACON: '📍',
     LANDMARK: '🏔️',
@@ -55,12 +55,11 @@ const TERRAIN_EMOJI = {
 
 // Названия на русском
 const TERRAIN_LABELS = {
-    TAKEOFF:  'Точка взлёта',
+    TAKEOFF:   'Точка взлёта',
     LANDING_ZONE: 'Зона посадки',
-    BEACON: 'Путевая точка',
+    BEACON:  'Путевая точка',
     LANDMARK: 'Ориентир',
 } as const;
-
 
 
 
@@ -86,7 +85,7 @@ const getTerrainPointIcon = (type: string): L.DivIcon => {
                     transform: translateX(-50%);
                     width: 20px;
                     height: 6px;
-                    background: radial-gradient(ellipse, rgba(0,0,0,0.4), transparent);
+                    background:  radial-gradient(ellipse, rgba(0,0,0,0.4), transparent);
                     border-radius: 50%;
                 "></div>
                 
@@ -98,9 +97,9 @@ const getTerrainPointIcon = (type: string): L.DivIcon => {
                     transform: translateX(-50%);
                     width: 30px;
                     height: 30px;
-                    background:  ${color};
-                    border:  3px solid white;
-                    border-radius: 50% 50% 50% 0;
+                    background:   ${color};
+                    border:   3px solid white;
+                    border-radius:  50% 50% 50% 0;
                     transform: translateX(-50%) rotate(-45deg);
                     box-shadow: 0 3px 8px rgba(0,0,0,0.3);
                 "></div>
@@ -108,7 +107,7 @@ const getTerrainPointIcon = (type: string): L.DivIcon => {
                 <!-- Иконка -->
                 <i class="fas ${iconClass}" style="
                     position: absolute;
-                    top:  7px;
+                    top:   7px;
                     left: 50%;
                     transform: translateX(-50%);
                     color: white;
@@ -151,19 +150,19 @@ function LocationSelector({
                               setMapCenter,
                           }: LocationSelectorProps) {
     const map = useMapEvents({
-        click(e: L.LeafletMouseEvent) {
+        click(e:  L.LeafletMouseEvent) {
             setContextMenuPos(null); // close context menu
             onSelect(e.latlng.lat, e.latlng.lng);
         },
         mousemove(e: L.LeafletMouseEvent) {
-            setCursor(e.latlng.lat, e.latlng.lng);
-           // setContextMenuPos(null); // also close menu when moving map
+            setCursor(e.latlng. lat, e.latlng. lng);
+            // setContextMenuPos(null); // also close menu when moving map
         },
         contextmenu(e: L.LeafletMouseEvent) {
             setContextMenuPos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
-            setContextMenuData({ lat: e.latlng.lat, lng: e.latlng.lng });
+            setContextMenuData({ lat: e.latlng. lat, lng: e.latlng.lng });
         },
-        dragstart: () => setContextMenuPos(null),
+        dragstart:  () => setContextMenuPos(null),
         zoomstart: () => setContextMenuPos(null),
         moveend: () => {
             const center = map.getCenter();
@@ -198,20 +197,20 @@ const MapView: React.FC = () => {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [elevationEnabled, setElevationEnabled] = useState(false);
-    const [autoFillMode, setAutoFillMode] = useState<AutoFillMode>(() => 
+    const [autoFillMode, setAutoFillMode] = useState<AutoFillMode>(() =>
         parseAutoFillMode(localStorage.getItem('autoFillMode'))
     );
 
-    const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+    const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y:  number } | null>(null);
     const [contextMenuData, setContextMenuData] = useState<{ lat: number; lng: number } | null>(null);
 
     const [spotFormOpen, setSpotFormOpen] = useState(false);
     const [terrainFormOpen, setTerrainFormOpen] = useState(false);
 
-    const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; zoom: number }>({ 
-        lat: 55.75, 
-        lng: 37.61, 
-        zoom: 5 
+    const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; zoom: number }>({
+        lat: 55.75,
+        lng: 37.61,
+        zoom: 5
     });
 
     const [visibleTerrainPoints, setVisibleTerrainPoints] = useState<TerrainPoint[]>([]);
@@ -219,7 +218,7 @@ const MapView: React.FC = () => {
 
 
 
-    const center: LatLngExpression = [55.75, 37.61];
+    const center:  LatLngExpression = [55.75, 37.61];
 
 
     const layers: Record<LayerType, { url: string; label: string }> = {
@@ -255,10 +254,10 @@ const MapView: React.FC = () => {
     // Helper function to get tile coordinates from lat/lng
     // Uses Web Mercator projection (EPSG:3857) to convert geographic coordinates
     // to tile coordinates in the XYZ tile scheme used by most web map services
-    const getTileCoords = (lat: number, lng: number, zoom: number) => {
+    const getTileCoords = (lat: number, lng:  number, zoom: number) => {
         // Clamp latitude to valid Web Mercator range to avoid mathematical errors
         const clampedLat = Math.max(-85.0511, Math.min(85.0511, lat));
-        
+
         // X coordinate: simple linear mapping from longitude
         const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
         // Y coordinate: inverse Mercator projection for latitude
@@ -270,7 +269,7 @@ const MapView: React.FC = () => {
     const tilePreviewUrls = useMemo(() => {
         const previewZoom = Math.min(mapCenter.zoom, 8);
         const { x, y, z } = getTileCoords(mapCenter.lat, mapCenter.lng, previewZoom);
-        
+
         return {
             standard: layers.standard.url
                 .replace('{z}', z.toString())
@@ -280,15 +279,15 @@ const MapView: React.FC = () => {
             topo: layers.topo.url
                 .replace('{z}', z.toString())
                 .replace('{x}', x.toString())
-                .replace('{y}', y.toString())
+                .replace('{y}', y. toString())
                 .replace('{s}', 'a'),
             satellite: layers.satellite.url
                 .replace('{z}', z.toString())
-                .replace('{x}', x.toString())
+                .replace('{x}', x. toString())
                 .replace('{y}', y.toString())
                 .replace('{s}', 'a'),
         };
-    }, [mapCenter.lat, mapCenter.lng, mapCenter.zoom]);
+    }, [mapCenter. lat, mapCenter.lng, mapCenter.zoom]);
 
     const handleSpotSave = async (data: Spot) => {
 
@@ -306,7 +305,7 @@ const MapView: React.FC = () => {
         }
     };
 
-    const handleTerrainSubmit = async (data: TerrainPoint & { spotId?: number }) => {
+    const handleTerrainSubmit = async (data: TerrainPoint & { spotId?:  number }) => {
         try {
             const result = await createTerrainPoint(data, data.spotId);
             console.log("✅ TerrainPoint saved:", result);
@@ -321,18 +320,18 @@ const MapView: React.FC = () => {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), ELEVATION_API_TIMEOUT);
-            
+
             const res = await fetch(
                 `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`,
                 { signal: controller.signal }
             );
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!res.ok) {
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
-            
+
             const data = await res.json();
             if (data.results && data.results.length > 0) {
                 return Math.round(data.results[0].elevation);
@@ -364,15 +363,15 @@ const MapView: React.FC = () => {
     const [lastFetchPos, setLastFetchPos] = useState<{lat: number, lng: number} | null>(null);
 
     useEffect(() => {
-        if (!cursorPos) return;
+        if (! cursorPos) return;
 
         // Only fetch if moved > ~0.0001 degrees (~11m)
         const moved =
-            !lastFetchPos ||
+            ! lastFetchPos ||
             Math.abs(cursorPos.lat - lastFetchPos.lat) > 0.0001 ||
             Math.abs(cursorPos.lng - lastFetchPos.lng) > 0.0001;
 
-        if (!moved) return;
+        if (! moved) return;
 
         const timer = setTimeout(async () => {
             if(elevationEnabled) {
@@ -395,20 +394,42 @@ const MapView: React.FC = () => {
         return () => clearTimeout(timer);
     }, [cursorPos, lastFetchPos]);
 
+    // Add custom CSS to hide popup background and close button
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .leaflet-popup-content-wrapper {
+                background:  transparent ! important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            .leaflet-popup-tip {
+                display: none !important;
+            }
+            .leaflet-popup-close-button {
+                display: none ! important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
 
 
 
     return (
         <div style={{ height: "100vh", width: "100vw", position: "relative" }}
-        onClick={() => setContextMenuPos(null)}>
+             onClick={() => setContextMenuPos(null)}>
             {toast && (
                 <div
                     style={{
                         position: "fixed",
                         top: 20,
                         left: "50%",
-                        transform: "translateX(-50%)",
-                        background: 
+                        transform:  "translateX(-50%)",
+                        background:
                             toast.type === "success"
                                 ? "rgba(0, 200, 120, 0.3)"
                                 : toast.type === "error"
@@ -418,7 +439,7 @@ const MapView: React.FC = () => {
                         border: "1px solid rgba(255,255,255,0.3)",
                         color: "#fff",
                         padding: "15px 30px",
-                        borderRadius: 15,
+                        borderRadius:  15,
                         zIndex: 3000,
                         fontWeight: 500,
                         fontSize: 15,
@@ -433,13 +454,13 @@ const MapView: React.FC = () => {
             <MapContainer
                 center={center}
                 zoom={5}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: "100%", width:  "100%" }}
                 attributionControl={false} // hide Leaflet watermark
             >
-                <TileLayer url={layers[activeLayer].url} />
+                <TileLayer url={layers[activeLayer]. url} />
                 {spots
-                    .filter(spot => !showingRelatedPointsForSpot || spot.id === showingRelatedPointsForSpot.id)
-                    .map((spot) => (
+                    .filter(spot => ! showingRelatedPointsForSpot || spot.id === showingRelatedPointsForSpot.id)
+                    . map((spot) => (
                         <Marker key={spot.id} position={[spot.latitude, spot.longitude]}>
                             <Popup>
                                 <SpotCard
@@ -447,14 +468,14 @@ const MapView: React.FC = () => {
                                     onAddTerrainPoint={(s) => {
                                         console.log("Add terrain point for spot:", s);
                                     }}
-                                    isShowingRelatedPoints={showingRelatedPointsForSpot?.id === spot.id}
+                                    isShowingRelatedPoints={showingRelatedPointsForSpot?. id === spot.id}
                                     onToggleRelatedPoints={(s) => {
-                                        if (showingRelatedPointsForSpot?.id === s.id) {
+                                        if (showingRelatedPointsForSpot?. id === s. id) {
                                             setShowingRelatedPointsForSpot(null);
                                             setVisibleTerrainPoints([]);
                                         } else {
                                             setShowingRelatedPointsForSpot(s);
-                                            setVisibleTerrainPoints(s.terrainPoints || []);
+                                            setVisibleTerrainPoints(s. terrainPoints || []);
                                         }
                                     }}
                                 />
@@ -467,7 +488,7 @@ const MapView: React.FC = () => {
                 {visibleTerrainPoints.map((tp) => (
                     <Marker
                         key={tp.id}
-                        position={[tp. latitude, tp.longitude]}
+                        position={[tp.  latitude, tp.longitude]}
                         icon={getTerrainPointIcon(tp.type)} // ✅ Используем функцию вместо константы
                     >
                         <Popup>
@@ -478,10 +499,10 @@ const MapView: React.FC = () => {
                                 <h4 style={{
                                     margin: '0 0 8px 0',
                                     fontSize: 16,
-                                    fontWeight:  600,
+                                    fontWeight:   600,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap:  8
+                                    gap:   8
                                 }}>
                     <span style={{ fontSize: 20 }}>
                         {TERRAIN_EMOJI[tp.type as keyof typeof TERRAIN_EMOJI] || '📍'}
@@ -491,13 +512,13 @@ const MapView: React.FC = () => {
                                 <p style={{
                                     margin: '4px 0',
                                     fontSize: 13,
-                                    color:  TERRAIN_COLORS[tp.type as keyof typeof TERRAIN_COLORS] || '#9b59b6',
-                                    fontWeight: 600
+                                    color:   TERRAIN_COLORS[tp.type as keyof typeof TERRAIN_COLORS] || '#9b59b6',
+                                    fontWeight:  600
                                 }}>
                                     {TERRAIN_LABELS[tp.type as keyof typeof TERRAIN_LABELS] || tp.type}
                                 </p>
                                 <p style={{ margin: '4px 0', fontSize: 13 }}>
-                                    <strong>Координаты:</strong> {tp. latitude. toFixed(4)}, {tp.longitude.toFixed(4)}
+                                    <strong>Координаты:</strong> {tp.  latitude.  toFixed(4)}, {tp.longitude. toFixed(4)}
                                 </p>
                                 <p style={{ margin: '4px 0', fontSize: 13 }}>
                                     <strong>Высота:</strong> {tp.elevation} m
@@ -521,7 +542,7 @@ const MapView: React.FC = () => {
                 ))}
 
                 {hoverPos && isAdding && <Marker position={[hoverPos.lat, hoverPos.lng]} />}
-                {newSpot && !modalOpen && <Marker position={[newSpot.latitude, newSpot.longitude]} />}
+                {newSpot && ! modalOpen && <Marker position={[newSpot.latitude, newSpot.longitude]} />}
                 <LocationSelector
                     onSelect={handleSelect}
                     setCursor={(lat, lng) => setCursorPos({ lat, lng })}
@@ -537,7 +558,7 @@ const MapView: React.FC = () => {
                     style={{
                         position: "fixed",
                         top: contextMenuPos.y,
-                        left: contextMenuPos.x,
+                        left: contextMenuPos. x,
                         background: "rgba(20,20,20,0.9)",
                         color: "#fff",
                         padding: 12,
@@ -551,8 +572,8 @@ const MapView: React.FC = () => {
                     onClick={(e) => e.stopPropagation()} // prevent menu from closing when clicking inside
                 >
                     <div
-                        style={{ 
-                            cursor: "pointer", 
+                        style={{
+                            cursor: "pointer",
                             padding: "8px 12px",
                             borderRadius: 10,
                             transition: "all 0.3s ease",
@@ -562,11 +583,11 @@ const MapView: React.FC = () => {
                             e.currentTarget.style.transform = "translateX(4px)";
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
+                            e. currentTarget.style.background = "transparent";
                             e.currentTarget.style.transform = "translateX(0)";
                         }}
                         onClick={() => {
-                            setNewSpot({ latitude: contextMenuData!.lat, longitude: contextMenuData!.lng });
+                            setNewSpot({ latitude: contextMenuData! .lat, longitude: contextMenuData!.lng });
                             setSpotFormOpen(true);
                             setContextMenuPos(null);
                         }}
@@ -574,8 +595,8 @@ const MapView: React.FC = () => {
                         ➕ Add Spot
                     </div>
                     <div
-                        style={{ 
-                            cursor: "pointer", 
+                        style={{
+                            cursor: "pointer",
                             padding: "8px 12px",
                             borderRadius: 10,
                             transition: "all 0.3s ease",
@@ -585,7 +606,7 @@ const MapView: React.FC = () => {
                             e.currentTarget.style.transform = "translateX(4px)";
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget. style.background = "transparent";
                             e.currentTarget.style.transform = "translateX(0)";
                         }}
                         onClick={() => {
@@ -625,14 +646,14 @@ const MapView: React.FC = () => {
                         background: "rgba(100,100,100,0.4)",
                         border: "1px solid rgba(255,255,255,0.2)",
                         padding: "10px 15px",
-                        borderRadius: 12,
+                        borderRadius:  12,
                         color: "#fff",
                         cursor: "pointer",
                         fontWeight: 500,
                         transition: "all 0.3s ease",
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(100,100,100,0.6)";
+                        e.currentTarget. style.background = "rgba(100,100,100,0.6)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                         e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
                     }}
@@ -652,8 +673,8 @@ const MapView: React.FC = () => {
                 isOpen={settingsOpen}
                 onRequestClose={() => setSettingsOpen(false)}
                 style={{
-                    overlay: { 
-                        backgroundColor: "rgba(0,0,0,0.5)", 
+                    overlay: {
+                        backgroundColor: "rgba(0,0,0,0.5)",
                         zIndex: 2000,
                         backdropFilter: "blur(4px)",
                     },
@@ -678,20 +699,20 @@ const MapView: React.FC = () => {
                 <div
                     style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems:  "center",
                         justifyContent: "space-between",
                         marginBottom: 25,
                     }}
                 >
                     <span style={{ fontWeight: 500, fontSize: 15 }}>Показывать высоту</span>
                     <div
-                        onClick={() => setElevationEnabled(!elevationEnabled)}
+                        onClick={() => setElevationEnabled(! elevationEnabled)}
                         style={{
                             width: 54,
                             height: 28,
                             borderRadius: 14,
-                            background: elevationEnabled 
-                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)" 
+                            background: elevationEnabled
+                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)"
                                 : "rgba(150, 150, 150, 0.5)",
                             position: "relative",
                             cursor: "pointer",
@@ -725,12 +746,12 @@ const MapView: React.FC = () => {
                     <span style={{ fontWeight: 500, fontSize: 15, display: 'block', marginBottom: 12 }}>
                         Автозаполнение координат
                     </span>
-                    <select 
-                        value={autoFillMode} 
+                    <select
+                        value={autoFillMode}
                         onChange={(e) => setAutoFillMode(e.target.value as 'coords-elevation' | 'elevation' | 'none')}
                         style={{
                             width: '100%',
-                            padding: '10px 14px',
+                            padding:  '10px 14px',
                             borderRadius: 12,
                             border: '1px solid rgba(255,255,255,0.3)',
                             background: 'rgba(255,255,255,0.1)',
@@ -750,7 +771,7 @@ const MapView: React.FC = () => {
                         <option value="coords-elevation" style={{ background: '#2a2a2a', color: '#fff' }}>
                             Координаты + высота
                         </option>
-                        <option value="elevation" style={{ background: '#2a2a2a', color: '#fff' }}>
+                        <option value="elevation" style={{ background: '#2a2a2a', color:  '#fff' }}>
                             Только высота
                         </option>
                         <option value="none" style={{ background: '#2a2a2a', color: '#fff' }}>
@@ -779,20 +800,20 @@ const MapView: React.FC = () => {
                             width: 56,
                             height: 28,
                             borderRadius: 14,
-                            background: performanceMonitorEnabled 
-                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)" 
+                            background: performanceMonitorEnabled
+                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)"
                                 : "rgba(150, 150, 150, 0.5)",
                             position: "relative",
                             cursor: "pointer",
                             transition: "all 0.3s ease",
-                            border: "1px solid rgba(255,255,255,0.2)",
+                            border:  "1px solid rgba(255,255,255,0.2)",
                         }}
                     >
                         <div
                             style={{
                                 width: 24,
                                 height: 24,
-                                borderRadius: "50%",
+                                borderRadius:  "50%",
                                 background: "#fff",
                                 position: "absolute",
                                 top: 1.5,
@@ -815,13 +836,13 @@ const MapView: React.FC = () => {
                         borderRadius: 12,
                         cursor: "pointer",
                         color: "white",
-                        fontWeight: 600,
+                        fontWeight:  600,
                         fontSize: 15,
                         transition: "all 0.3s ease",
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.background = "rgba(30,144,255,0.8)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e. currentTarget.style.transform = "translateY(-2px)";
                         e.currentTarget.style.boxShadow = "0 4px 12px rgba(30,144,255,0.4)";
                     }}
                     onMouseLeave={(e) => {
@@ -861,7 +882,7 @@ const MapView: React.FC = () => {
             <div style={{ position: "absolute", bottom: 20, right: 20, zIndex: 1000 }}>
                 <button
                     aria-label="Выбрать слой карты"
-                    onClick={() => setLayerPopupOpen(!layerPopupOpen)}
+                    onClick={() => setLayerPopupOpen(! layerPopupOpen)}
                     style={{
                         width: 56,
                         height: 56,
@@ -898,7 +919,7 @@ const MapView: React.FC = () => {
                             right: 0,
                             width: 240,
                             background: "rgba(255,255,255,0.95)",
-                            backdropFilter: "blur(15px)",
+                            backdropFilter:  "blur(15px)",
                             borderRadius: 20,
                             padding: 15,
                             display: "flex",
@@ -924,20 +945,20 @@ const MapView: React.FC = () => {
                                     border:
                                         activeLayer === layerKey
                                             ? "2px solid #1E90FF"
-                                            : "1px solid rgba(0,0,0,0.15)",
+                                            :  "1px solid rgba(0,0,0,0.15)",
                                     cursor: "pointer",
-                                    background: activeLayer === layerKey ? "rgba(30,144,255,0.15)" : "transparent",
+                                    background: activeLayer === layerKey ?  "rgba(30,144,255,0.15)" : "transparent",
                                     transition: "all 0.3s ease",
                                 }}
                                 onMouseEnter={(e) => {
                                     if (activeLayer !== layerKey) {
-                                        e.currentTarget.style.background = "rgba(30,144,255,0.08)";
+                                        e.currentTarget.style. background = "rgba(30,144,255,0.08)";
                                         e.currentTarget.style.transform = "translateX(4px)";
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (activeLayer !== layerKey) {
-                                        e.currentTarget.style.background = "transparent";
+                                        e.currentTarget. style.background = "transparent";
                                         e.currentTarget.style.transform = "translateX(0)";
                                     }
                                 }}
@@ -951,7 +972,7 @@ const MapView: React.FC = () => {
                                         border: "1px solid rgba(0,0,0,0.1)",
                                         backgroundImage: `url(${tilePreviewUrls[layerKey]})`,
                                         backgroundSize: "cover",
-                                        backgroundPosition: "center",
+                                        backgroundPosition:  "center",
                                     }}
                                     aria-label={`Preview ${layers[layerKey].label}`}
                                 />
@@ -977,7 +998,7 @@ const MapView: React.FC = () => {
                         justifyContent: "center",
                         alignItems: "center",
                     },
-                    content: {
+                    content:  {
                         position: "static", // remove default inset
                         inset: "auto",
                         transform: "none",
@@ -990,7 +1011,7 @@ const MapView: React.FC = () => {
             >
                 <SpotForm
                     initialSpot={contextMenuData ?
-                            {latitude : contextMenuData.lat, longitude: contextMenuData.lng} : undefined}
+                        {latitude :  contextMenuData.lat, longitude: contextMenuData.lng} :  undefined}
                     onSubmit={handleSpotSave}
                     autoFillMode={autoFillMode}
                     fetchElevation={fetchElevationForPosition}
@@ -1004,7 +1025,7 @@ const MapView: React.FC = () => {
                 onRequestClose={() => setTerrainFormOpen(false)}
                 style={{
                     overlay: { backgroundColor: "rgba(0,0,0,0.4)", zIndex: 2000, display: "flex", justifyContent: "center", alignItems: "center" },
-                    content: {
+                    content:  {
                         position: "static",
                         inset: "auto",
                         transform: "none",
