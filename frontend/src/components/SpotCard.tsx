@@ -5,10 +5,13 @@ import type { TerrainPoint } from '../types/TerrainPoint';
 interface SpotCardProps {
     spot: Spot;
     onAddTerrainPoint: (spot: Spot) => void;
-    onShowRelatedPoints?: (spot: Spot) => void;
+    isShowingRelatedPoints?: boolean;
+    onToggleRelatedPoints?: (spot: Spot) => void;
 }
 
-const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, onShowRelatedPoints }) => {
+const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, isShowingRelatedPoints, onToggleRelatedPoints }) => {
+    console.log('SpotCard spot data:', spot);
+    
     return (
         <div style={{
             background: '#ffffff',
@@ -53,14 +56,14 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, onShowRela
                 }}>{spot.description}</p>
             )}
             
-            {onShowRelatedPoints && spot.terrainPoints && spot.terrainPoints.length > 0 && (
+            {onToggleRelatedPoints && spot.terrainPoints && spot.terrainPoints.length > 0 && (
                 <button
-                    onClick={() => onShowRelatedPoints(spot)}
+                    onClick={() => onToggleRelatedPoints(spot)}
                     style={{
                         width: '100%',
                         padding: '10px 15px',
                         borderRadius: '12px',
-                        background: 'rgba(46,213,115,0.6)',
+                        background: isShowingRelatedPoints ? 'rgba(255,87,34,0.6)' : 'rgba(46,213,115,0.6)',
                         border: '1px solid rgba(255,255,255,0.3)',
                         color: 'white',
                         cursor: 'pointer',
@@ -70,17 +73,20 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, onShowRela
                         marginBottom: '8px',
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(46,213,115,0.8)';
+                        e.currentTarget.style.background = isShowingRelatedPoints ? 'rgba(255,87,34,0.8)' : 'rgba(46,213,115,0.8)';
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(46,213,115,0.5)';
+                        e.currentTarget.style.boxShadow = isShowingRelatedPoints ? '0 6px 16px rgba(255,87,34,0.5)' : '0 6px 16px rgba(46,213,115,0.5)';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(46,213,115,0.6)';
+                        e.currentTarget.style.background = isShowingRelatedPoints ? 'rgba(255,87,34,0.6)' : 'rgba(46,213,115,0.6)';
                         e.currentTarget.style.transform = 'translateY(0)';
                         e.currentTarget.style.boxShadow = 'none';
                     }}
                 >
-                    🗺️ Показать связанные точки ({spot.terrainPoints.length})
+                    {isShowingRelatedPoints 
+                        ? `🔴 Скрыть связанные точки (${spot.terrainPoints.length})`
+                        : `🗺️ Показать связанные точки (${spot.terrainPoints.length})`
+                    }
                 </button>
             )}
 
