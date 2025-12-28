@@ -90,7 +90,12 @@ public class ProfilingAspect {
     private String getCallerInfo() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         
-        // Пропускаем первые элементы стека (getStackTrace, getCallerInfo, profileMethod, invoke)
+        // Пропускаем первые элементы стека:
+        // [0] = getStackTrace
+        // [1] = getCallerInfo
+        // [2] = profileMethod
+        // [3] = profileAnnotatedMethods (AOP proxy method)
+        // Начинаем с индекса 4 для поиска реального вызывающего кода
         for (int i = 4; i < stackTrace.length; i++) {
             StackTraceElement element = stackTrace[i];
             String className = element.getClassName();
@@ -174,7 +179,8 @@ public class ProfilingAspect {
         try {
             String str = value.toString();
             // Если toString не переопределён, выводим тип + hashCode
-            if (str.contains("@")) {
+            // Проверяем шаблон Object.toString(): ClassName@hexHash
+            if (str.matches(".*@[0-9a-f]+$")) {
                 return String.format("%s@%s", value.getClass().getSimpleName(), 
                     Integer.toHexString(value.hashCode()));
             }
