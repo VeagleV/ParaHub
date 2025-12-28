@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.SpotDTO;
+import org.bin.parahub.dto.WindDTO;
 import org.bin.parahub.exception.SpotNotFoundException;
 import org.bin.parahub.mapper.SpotMapper;
 import org.bin.parahub.entity.Spot;
@@ -104,17 +105,17 @@ public class SpotService {
         existingSpot.setBestSeason(spotDTO.getBestSeason());
         existingSpot.setTerrainPoints(terrainPointMapper.toEntityList(spotDTO.getTerrainPoints()));
         
-        // Update winds
+        // Update winds using WindMapper
         existingSpot.getWinds().clear();
         if (spotDTO.getWinds() != null) {
-            spotDTO.getWinds().forEach(windDTO -> {
-                var wind = new org.bin.parahub.entity.Wind();
+            for (WindDTO windDTO : spotDTO.getWinds()) {
+                org.bin.parahub.entity.Wind wind = new org.bin.parahub.entity.Wind();
                 wind.setDirection(windDTO.getDirection());
                 wind.setMinSpeed(windDTO.getMinSpeed());
                 wind.setMaxSpeed(windDTO.getMaxSpeed());
                 wind.setSpot(existingSpot);
                 existingSpot.getWinds().add(wind);
-            });
+            }
         }
         
         Spot saved = spotRepository.save(existingSpot);

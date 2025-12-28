@@ -23,4 +23,12 @@ public class WindDTO {
     private Integer maxSpeed;
     
     private Long spotId;
+    
+    @AssertTrue(message = "Максимальная скорость должна быть больше или равна минимальной")
+    private boolean isMaxSpeedValid() {
+        if (minSpeed == null || maxSpeed == null) {
+            return true; // Let @NotNull handle null validation
+        }
+        return maxSpeed >= minSpeed;
+    }
 }

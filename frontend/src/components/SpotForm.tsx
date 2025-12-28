@@ -258,13 +258,13 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                                 {dir.label}
                             </span>
                             
-                            {isActive && (
+                            {isActive && wind && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
                                     <input
                                         type="number"
                                         min={0}
                                         max={30}
-                                        value={wind!.minSpeed}
+                                        value={wind.minSpeed}
                                         onChange={(e) => {
                                             setWinds(winds.map(w => 
                                                 w.direction === dir.code 
@@ -279,7 +279,7 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                                         type="number"
                                         min={0}
                                         max={30}
-                                        value={wind!.maxSpeed}
+                                        value={wind.maxSpeed}
                                         onChange={(e) => {
                                             setWinds(winds.map(w => 
                                                 w.direction === dir.code 
