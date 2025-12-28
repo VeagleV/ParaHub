@@ -19,6 +19,8 @@ import type {TerrainPoint} from "../types/TerrainPoint.ts";
 import SpotCard from "./SpotCard.tsx";
 import SpotForm from "./SpotForm.tsx";
 import TerrainPointForm from "./TerrainPointForm.tsx";
+import { PerformanceMonitor } from './PerformanceMonitor';
+import { usePerformance, profileAsync } from '../hooks/usePerformance';
 
 L.Icon.Default.mergeOptions({ iconUrl, shadowUrl });
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -135,6 +137,12 @@ const getTypeLabel = (type: string): string => {
 };
 
 const MapView: React.FC = () => {
+    // Performance profiling
+    const [performanceMonitorEnabled, setPerformanceMonitorEnabled] = useState<boolean>(() =>
+        localStorage.getItem('performanceMonitorEnabled') === 'true'
+    );
+    usePerformance('MapView', performanceMonitorEnabled);
+
     const [spots, setSpots] = useState<Spot[]>([]);
     const [isAdding, setIsAdding] = useState(false);
     const [hoverPos, setHoverPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -186,7 +194,7 @@ const MapView: React.FC = () => {
     useEffect(() => {
         const fetchSpots = async () => {
             try {
-                const data = await getAllSpots();
+                const data = await profileAsync('getAllSpots API', () => getAllSpots());
                 setSpots(data);
             } catch (err) {
                 console.error("Ошибка загрузки стартов:", err);
@@ -724,6 +732,51 @@ const MapView: React.FC = () => {
                     </select>
                 </div>
 
+                {/* Performance Monitor toggle */}
+                <div
+                    style={{
+                        marginBottom: 25,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <span style={{ fontWeight: 500, fontSize: 15 }}>Performance Monitor</span>
+                    <div
+                        onClick={() => {
+                            const newValue = !performanceMonitorEnabled;
+                            setPerformanceMonitorEnabled(newValue);
+                            localStorage.setItem('performanceMonitorEnabled', String(newValue));
+                        }}
+                        style={{
+                            width: 56,
+                            height: 28,
+                            borderRadius: 14,
+                            background: performanceMonitorEnabled 
+                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)" 
+                                : "rgba(150, 150, 150, 0.5)",
+                            position: "relative",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: "50%",
+                                background: "#fff",
+                                position: "absolute",
+                                top: 1.5,
+                                left: performanceMonitorEnabled ? 28 : 2,
+                                transition: "all 0.3s ease",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                            }}
+                        />
+                    </div>
+                </div>
+
                 <button
                     onClick={() => setSettingsOpen(false)}
                     aria-label="Закрыть настройки"
@@ -948,6 +1001,9 @@ const MapView: React.FC = () => {
                     fetchElevation={fetchElevationForPosition}
                 />
             </Modal>
+
+            {/* Performance Monitor */}
+            {performanceMonitorEnabled && <PerformanceMonitor />}
 
         </div>
     );
