@@ -123,6 +123,17 @@ const Toast = ({ message, type }: { message: string; type: "success" | "error" |
     </div>
 );
 
+// Helper function to translate terrain point types
+const getTypeLabel = (type: string): string => {
+    const types: Record<string, string> = {
+        'TAKEOFF': 'Точка взлёта',
+        'LANDING_ZONE': 'Зона посадки',
+        'BEACON': 'Путевая точка',
+        'LANDMARK': 'Ориентир',
+    };
+    return types[type] || type;
+};
+
 const MapView: React.FC = () => {
     const [spots, setSpots] = useState<Spot[]>([]);
     const [isAdding, setIsAdding] = useState(false);
@@ -156,6 +167,7 @@ const MapView: React.FC = () => {
     });
 
     const [visibleTerrainPoints, setVisibleTerrainPoints] = useState<TerrainPoint[]>([]);
+    const [showingRelatedPointsForSpot, setShowingRelatedPointsForSpot] = useState<Spot | null>(null);
 
 
 
@@ -254,13 +266,6 @@ const MapView: React.FC = () => {
         } catch (err) {
             console.error("❌ Ошибка при добавлении точки рельефа:", err);
             showToast("Не удалось добавить точку рельефа", "error");
-        }
-    };
-
-    const handleShowRelatedPoints = (spot: Spot) => {
-        if (spot.terrainPoints && spot.terrainPoints.length > 0) {
-            setVisibleTerrainPoints(spot.terrainPoints);
-            showToast(`Показаны ${spot.terrainPoints.length} точек рельефа для ${spot.name}`, "info");
         }
     };
 
@@ -384,19 +389,31 @@ const MapView: React.FC = () => {
                 attributionControl={false} // hide Leaflet watermark
             >
                 <TileLayer url={layers[activeLayer].url} />
-                {spots.map((spot) => (
-                    <Marker key={spot.id} position={[spot.latitude, spot.longitude]}>
-                        <Popup>
-                            <SpotCard
-                                spot={spot}
-                                onAddTerrainPoint={(s) => {
-                                    console.log("Add terrain point for spot:", s);
-                                }}
-                                onShowRelatedPoints={handleShowRelatedPoints}
-                            />
-                        </Popup>
-                    </Marker>
-                ))}
+                {spots
+                    .filter(spot => !showingRelatedPointsForSpot || spot.id === showingRelatedPointsForSpot.id)
+                    .map((spot) => (
+                        <Marker key={spot.id} position={[spot.latitude, spot.longitude]}>
+                            <Popup>
+                                <SpotCard
+                                    spot={spot}
+                                    onAddTerrainPoint={(s) => {
+                                        console.log("Add terrain point for spot:", s);
+                                    }}
+                                    isShowingRelatedPoints={showingRelatedPointsForSpot?.id === spot.id}
+                                    onToggleRelatedPoints={(s) => {
+                                        if (showingRelatedPointsForSpot?.id === s.id) {
+                                            setShowingRelatedPointsForSpot(null);
+                                            setVisibleTerrainPoints([]);
+                                        } else {
+                                            setShowingRelatedPointsForSpot(s);
+                                            setVisibleTerrainPoints(s.terrainPoints || []);
+                                        }
+                                    }}
+                                />
+                            </Popup>
+                        </Marker>
+                    ))
+                }
 
                 {/* Terrain point markers */}
                 {visibleTerrainPoints.map((tp) => (
@@ -407,18 +424,59 @@ const MapView: React.FC = () => {
                     >
                         <Popup>
                             <div style={{
-                                padding: '10px',
-                                minWidth: '200px',
+                                background: '#ffffff',
+                                border: '1px solid rgba(0,0,0,0.1)',
+                                borderRadius: '12px',
+                                padding: '15px',
+                                minWidth: '250px',
+                                color: '#000',
                             }}>
-                                <h4 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 600 }}>{tp.name}</h4>
-                                <p style={{ margin: '4px 0', fontSize: 13 }}>
-                                    <strong>Тип:</strong> {tp.type}
-                                </p>
-                                <p style={{ margin: '4px 0', fontSize: 13 }}>
-                                    <strong>Высота:</strong> {tp.elevation} m
-                                </p>
+                                {/* Заголовок с иконкой типа */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                    <span style={{ fontSize: 24 }}>
+                                        {tp.type === 'TAKEOFF' ? '🛫' : 
+                                         tp.type === 'LANDING_ZONE' ? '🛬' :
+                                         tp.type === 'BEACON' ? '📍' : '🗺️'}
+                                    </span>
+                                    <h4 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>
+                                        {tp.name}
+                                    </h4>
+                                </div>
+
+                                {/* Информационный блок */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div style={{ 
+                                        padding: '6px 10px', 
+                                        background: 'rgba(46,213,115,0.1)', 
+                                        borderRadius: 8,
+                                        borderLeft: '3px solid #2ecc71'
+                                    }}>
+                                        <strong>Тип:</strong> {getTypeLabel(tp.type)}
+                                    </div>
+
+                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                                        <strong>Высота:</strong> <span>{tp.elevation} m</span>
+                                    </p>
+
+                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                                        <strong>Широта:</strong> <span>{tp.latitude.toFixed(5)}</span>
+                                    </p>
+
+                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                                        <strong>Долгота:</strong> <span>{tp.longitude.toFixed(5)}</span>
+                                    </p>
+                                </div>
+
                                 {tp.description && (
-                                    <p style={{ margin: '8px 0 0 0', fontSize: 12, fontStyle: 'italic', color: '#555' }}>
+                                    <p style={{ 
+                                        margin: '12px 0 0 0', 
+                                        fontSize: 13, 
+                                        fontStyle: 'italic',
+                                        color: '#555',
+                                        padding: '8px',
+                                        background: 'rgba(0,0,0,0.03)',
+                                        borderRadius: 8,
+                                    }}>
                                         {tp.description}
                                     </p>
                                 )}
@@ -632,50 +690,38 @@ const MapView: React.FC = () => {
                     <span style={{ fontWeight: 500, fontSize: 15, display: 'block', marginBottom: 12 }}>
                         Автозаполнение координат
                     </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {[
-                            { value: 'coords-elevation' as const, label: 'Координаты + высота' },
-                            { value: 'elevation' as const, label: 'Только высота' },
-                            { value: 'none' as const, label: 'Ничего' },
-                        ].map((option) => (
-                            <label
-                                key={option.value}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 10,
-                                    cursor: 'pointer',
-                                    padding: '8px 12px',
-                                    borderRadius: 10,
-                                    background: autoFillMode === option.value ? 'rgba(30,144,255,0.3)' : 'rgba(255,255,255,0.05)',
-                                    transition: 'all 0.3s ease',
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (autoFillMode !== option.value) {
-                                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (autoFillMode !== option.value) {
-                                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                    }
-                                }}
-                            >
-                                <input
-                                    type="radio"
-                                    name="autoFillMode"
-                                    value={option.value}
-                                    checked={autoFillMode === option.value}
-                                    onChange={(e) => setAutoFillMode(e.target.value as 'coords-elevation' | 'elevation' | 'none')}
-                                    style={{
-                                        cursor: 'pointer',
-                                        accentColor: '#1E90FF',
-                                    }}
-                                />
-                                <span style={{ fontSize: 14 }}>{option.label}</span>
-                            </label>
-                        ))}
-                    </div>
+                    <select 
+                        value={autoFillMode} 
+                        onChange={(e) => setAutoFillMode(e.target.value as 'coords-elevation' | 'elevation' | 'none')}
+                        style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#fff',
+                            fontSize: 14,
+                            cursor: 'pointer',
+                            outline: 'none',
+                            transition: 'all 0.3s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                        }}
+                    >
+                        <option value="coords-elevation" style={{ background: '#2a2a2a', color: '#fff' }}>
+                            Координаты + высота
+                        </option>
+                        <option value="elevation" style={{ background: '#2a2a2a', color: '#fff' }}>
+                            Только высота
+                        </option>
+                        <option value="none" style={{ background: '#2a2a2a', color: '#fff' }}>
+                            Ничего
+                        </option>
+                    </select>
                 </div>
 
                 <button
