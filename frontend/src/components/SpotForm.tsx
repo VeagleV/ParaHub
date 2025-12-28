@@ -42,159 +42,161 @@ export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
         });
     };
 
+    // Shared input style
+    const inputStyle: React.CSSProperties = {
+        padding: "10px 14px",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.2)",
+        outline: "none",
+        fontSize: 15,
+        background: "rgba(255,255,255,0.95)",
+        color: "#000",
+        transition: "all 0.3s ease",
+        width: "100%",
+        boxSizing: "border-box" as const,
+    };
+
+    const labelStyle: React.CSSProperties = {
+        marginBottom: 6,
+        fontWeight: 600,
+        fontSize: 14,
+    };
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        e.target.style.boxShadow = "0 0 0 3px rgba(30,144,255,0.4)";
+        e.target.style.borderColor = "rgba(30,144,255,0.6)";
+        e.target.style.transform = "scale(1.01)";
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        e.target.style.boxShadow = "none";
+        e.target.style.borderColor = "rgba(255,255,255,0.2)";
+        e.target.style.transform = "scale(1)";
+    };
+
     return (
         <form
             onSubmit={handleSubmit}
             style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "15px",
-                padding: "25px",
-                borderRadius: "20px",
-                background: "rgba(0,0,0,0.6)", // dark glass
-                backdropFilter: "blur(10px)",
+                gap: "16px",
+                padding: "30px",
+                borderRadius: "25px",
+                background: "rgba(20,20,20,0.75)", // enhanced dark glass
+                backdropFilter: "blur(15px)",
+                border: "1px solid rgba(255,255,255,0.3)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
                 color: "#fff",
-                maxWidth: "400px",
+                maxWidth: "450px",
                 width: "100%",
                 boxSizing: "border-box",
-                fontFamily: "sans-serif",
+                fontFamily: "system-ui, sans-serif",
             }}
         >
             {/* Название */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label style={{ marginBottom: 5, fontWeight: 500 }}>Название старта</label>
+                <label style={labelStyle}>Название старта</label>
                 <input
                     type="text"
                     placeholder="Введите название"
                     value={formData.name}
                     onChange={(e) => handleChange("name", e.target.value)}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={inputStyle}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
             {/* Latitude / Longitude */}
-            <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <label>Широта</label>
+                    <label style={labelStyle}>Широта</label>
                     <input
                         type="number"
                         value={formData.latitude}
                         readOnly
-                        style={{
-                            padding: "8px 12px",
-                            borderRadius: 10,
-                            border: "none",
-                            background: "rgba(255,255,255,0.9)",
-                            color: "#000",
-                            width: "100%",
-                            boxSizing: "border-box",
-                        }}
+                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}}
                     />
                 </div>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <label>Долгота</label>
+                    <label style={labelStyle}>Долгота</label>
                     <input
                         type="number"
                         value={formData.longitude}
                         readOnly
-                        style={{
-                            padding: "8px 12px",
-                            borderRadius: 10,
-                            border: "none",
-                            background: "rgba(255,255,255,0.9)",
-                            color: "#000",
-                            width: "100%",
-                            boxSizing: "border-box",
-                        }}
+                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}}
                     />
                 </div>
             </div>
 
             {/* Elevation */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label>Высота (м)</label>
+                <label style={labelStyle}>Высота (м)</label>
                 <input
                     type="number"
                     value={formData.elevation}
                     onChange={(e) => handleChange("elevation", parseFloat(e.target.value))}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={inputStyle}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
             {/* Description */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label>Описание</label>
+                <label style={labelStyle}>Описание</label>
                 <textarea
                     placeholder="Краткое описание..."
                     value={formData.description}
                     onChange={(e) => handleChange("description", e.target.value)}
                     rows={3}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        resize: "vertical",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={{...inputStyle, resize: "vertical" as const}}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
             {/* Suitable Winds */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label>Подходящие ветра</label>
+                <label style={labelStyle}>Подходящие ветра</label>
                 <input
                     type="text"
                     placeholder="например: С, СВ"
                     value={formData.suitableWinds}
                     onChange={(e) => handleChange("suitableWinds", e.target.value)}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={inputStyle}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
             {/* Difficulty */}
             {/* XC Difficulty */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontWeight: 500 }}>Сложность маршрутных полётов ({formData.xcDifficulty})</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={labelStyle}>Сложность маршрутных полётов ({formData.xcDifficulty})</label>
                 <input
                     type="range"
                     min={1}
                     max={5}
                     value={formData.xcDifficulty}
                     onChange={(e) => handleChange("xcDifficulty", parseInt(e.target.value))}
-                    style={{ width: "100%" }}
+                    style={{ 
+                        width: "100%",
+                        accentColor: "rgba(30,144,255,0.8)",
+                        height: 6,
+                        cursor: "pointer",
+                    }}
                 />
+                <div style={{display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7}}>
+                    <span>Легко</span>
+                    <span>Сложно</span>
+                </div>
             </div>
 
             {/* Learning Difficulty */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontWeight: 500 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <label style={labelStyle}>
                     Сложность для обучения ({formData.learningDifficulty})
                 </label>
                 <input
@@ -205,48 +207,45 @@ export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
                     onChange={(e) =>
                         handleChange("learningDifficulty", parseInt(e.target.value))
                     }
-                    style={{ width: "100%" }}
+                    style={{ 
+                        width: "100%",
+                        accentColor: "rgba(30,144,255,0.8)",
+                        height: 6,
+                        cursor: "pointer",
+                    }}
                 />
+                <div style={{display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7}}>
+                    <span>Легко</span>
+                    <span>Сложно</span>
+                </div>
             </div>
 
 
             {/* Accessibility */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label>Доступность</label>
+                <label style={labelStyle}>Доступность</label>
                 <input
                     type="text"
                     placeholder="например: дорога, тропа"
                     value={formData.accessibility}
                     onChange={(e) => handleChange("accessibility", e.target.value)}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={inputStyle}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
             {/* Popularity */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-                <label>Популярность</label>
+                <label style={labelStyle}>Популярность</label>
                 <input
                     type="text"
                     placeholder="например: высокая, средняя"
                     value={formData.popularity}
                     onChange={(e) => handleChange("popularity", e.target.value)}
-                    style={{
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: "none",
-                        outline: "none",
-                        fontSize: 14,
-                        background: "rgba(255,255,255,0.9)",
-                        color: "#000",
-                    }}
+                    style={inputStyle}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                 />
             </div>
 
@@ -254,14 +253,27 @@ export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
             <button
                 type="submit"
                 style={{
-                    padding: "10px 15px",
-                    borderRadius: 12,
-                    border: "none",
-                    background: "rgba(30,144,255,0.8)",
+                    padding: "12px 20px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    background: "rgba(30,144,255,0.7)",
                     color: "#fff",
-                    fontWeight: 500,
+                    fontWeight: 600,
+                    fontSize: 16,
                     cursor: "pointer",
                     marginTop: 10,
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 12px rgba(30,144,255,0.3)",
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(30,144,255,0.9)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(30,144,255,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(30,144,255,0.7)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(30,144,255,0.3)";
                 }}
             >
                 Добавить старт

@@ -64,6 +64,35 @@
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.2);
 }
 
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  button {
+    padding: 0.5em 1em;
+    font-size: 0.9em;
+  }
+}
+
 a {
   font-weight: 500;
   color: #646cff;
