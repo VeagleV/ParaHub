@@ -53,9 +53,7 @@ public class SpotDTO {
     @Max(value = 5)
     private Integer learningDifficulty;
 
-    @Min(value = 1)
-    @Max(value = 5)
-    private Integer popularity;
+    private String popularity;
 
     private String bestSeason;
 

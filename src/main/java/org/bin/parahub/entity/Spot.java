@@ -45,7 +45,7 @@ public class Spot {
 
     private Integer learningDifficulty;// (1-5)
 
-    private Integer popularity;// (1-5)
+    private String popularity;
 
     private String bestSeason;
 
