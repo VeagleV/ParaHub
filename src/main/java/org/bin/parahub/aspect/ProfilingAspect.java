@@ -9,6 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Aspect for profiling methods/classes annotated with @Profiled
  * Logs to console and to logs/profiling.log file
@@ -152,45 +155,79 @@ public class ProfilingAspect {
 
     /**
      * Форматировать значение (аргумент или результат)
+     * С защитой от циклических ссылок
      */
     private String formatValue(Object value) {
+        return formatValue(value, new HashSet<>());
+    }
+
+    private String formatValue(Object value, Set<Integer> visited) {
         if (value == null) {
             return "null";
         }
-        
+
+        // Защита от циклических ссылок
+        int identityHash = System.identityHashCode(value);
+        if (visited.contains(identityHash)) {
+            return String.format("%s@%s[CIRCULAR]",
+                    value.getClass().getSimpleName(),
+                    Integer.toHexString(identityHash));
+        }
+
         // Примитивы и строки
-        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+        if (value instanceof String) {
+            String str = (String) value;
+            if (str.length() > 100) {
+                return "\"" + str.substring(0, 97) + "...\"";
+            }
+            return "\"" + str + "\"";
+        }
+
+        if (value instanceof Number || value instanceof Boolean || value instanceof Character) {
             return value.toString();
         }
-        
+
+        // Enum
+        if (value instanceof Enum) {
+            return value.toString();
+        }
+
         // Коллекции
         if (value instanceof java.util.Collection) {
             java.util.Collection<?> coll = (java.util.Collection<?>) value;
             return String.format("%s[size=%d]", value.getClass().getSimpleName(), coll.size());
         }
-        
-        // Массивы
-        if (value.getClass().isArray()) {
-            return String.format("%s[length=%d]", value.getClass().getSimpleName(), 
-                java.lang.reflect.Array.getLength(value));
+
+        // Map
+        if (value instanceof java.util.Map) {
+            java.util.Map<?, ?> map = (java. util.Map<?, ?>) value;
+            return String.format("%s[size=%d]", value.getClass().getSimpleName(), map.size());
         }
-        
-        // DTO объекты - попытка вывести toString
+
+        // Массивы
+        if (value. getClass().isArray()) {
+            return String.format("%s[length=%d]",
+                    value.getClass().getSimpleName(),
+                    java.lang.reflect.Array.getLength(value));
+        }
+
+        // Entity/DTO объекты - БЕЗ вызова toString()!
+        // Только тип + id если есть
+        visited.add(identityHash);
         try {
-            String str = value.toString();
-            // Если toString не переопределён, выводим тип + hashCode
-            // Проверяем шаблон Object.toString(): ClassName@hexHash
-            if (str.matches(".*@[0-9a-f]+$")) {
-                return String.format("%s@%s", value.getClass().getSimpleName(), 
-                    Integer.toHexString(value.hashCode()));
+            // Попытка найти getId через рефлексию
+            try {
+                java.lang.reflect.Method getIdMethod = value.getClass().getMethod("getId");
+                Object id = getIdMethod.invoke(value);
+                return String.format("%s[id=%s]", value.getClass().getSimpleName(), id);
+            } catch (Exception e) {
+                // Нет getId - просто тип
+                return String.format("%s@%s",
+                        value.getClass().getSimpleName(),
+                        Integer.toHexString(identityHash));
             }
-            // Ограничиваем длину вывода
-            if (str.length() > 200) {
-                return str.substring(0, 197) + "...";
-            }
-            return str;
-        } catch (Exception e) {
-            return value.getClass().getSimpleName();
+        } finally {
+            visited.remove(identityHash);
         }
     }
 

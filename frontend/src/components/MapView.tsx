@@ -14,6 +14,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import type {Spot} from "../types/Spot.ts";
 import type {TerrainPoint} from "../types/TerrainPoint.ts";
 import SpotCard from "./SpotCard.tsx";
@@ -28,23 +29,99 @@ delete (L.Icon.Default.prototype as any)._getIconUrl;
 // Constants
 const ELEVATION_API_TIMEOUT = 10000; // 10 seconds
 
-// SVG for terrain point marker icon (green)
-const TERRAIN_POINT_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
-        <path fill="#2ecc71" stroke="#fff" stroke-width="2" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z"/>
-        <circle cx="12.5" cy="12.5" r="6" fill="#fff"/>
-    </svg>
-`;
+// Цветовая схема для типов terrain points
+const TERRAIN_COLORS = {
+    TAKEOFF: '#e74c3c',        // 🔴 Красный - точка взлёта
+    LANDING_ZONE: '#2ecc71',   // 🟢 Зелёный - зона посадки
+    BEACON: '#3498db',         // 🔵 Синий - путевая точка
+    LANDMARK: '#f39c12',       // 🟠 Оранжевый - ориентир
+} as const;
 
-// Create custom icon for terrain points
-const terrainPointIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(TERRAIN_POINT_SVG),
-    shadowUrl,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
+const TERRAIN_ICONS = {
+    TAKEOFF: 'fa-plane-departure',
+    LANDING_ZONE: 'fa-plane-arrival',
+    BEACON: 'fa-location-dot',
+    LANDMARK:  'fa-mountain',
+} as const;
+
+
+// Эмодзи для типов (для легенды)
+const TERRAIN_EMOJI = {
+    TAKEOFF:  '🛫',
+    LANDING_ZONE: '🛬',
+    BEACON: '📍',
+    LANDMARK: '🏔️',
+} as const;
+
+// Названия на русском
+const TERRAIN_LABELS = {
+    TAKEOFF:  'Точка взлёта',
+    LANDING_ZONE: 'Зона посадки',
+    BEACON: 'Путевая точка',
+    LANDMARK: 'Ориентир',
+} as const;
+
+
+
+
+
+// Функция для получения Leaflet Icon по типу
+const getTerrainPointIcon = (type: string): L.DivIcon => {
+    const color = TERRAIN_COLORS[type as keyof typeof TERRAIN_COLORS] || '#9b59b6';
+    const iconClass = TERRAIN_ICONS[type as keyof typeof TERRAIN_ICONS] || 'fa-map-pin';
+
+    return new L.DivIcon({
+        className: 'custom-terrain-marker',
+        html: `
+            <div style="
+                position: relative;
+                width: 30px;
+                height: 42px;
+            ">
+                <!-- Тень -->
+                <div style="
+                    position: absolute;
+                    bottom: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 20px;
+                    height: 6px;
+                    background: radial-gradient(ellipse, rgba(0,0,0,0.4), transparent);
+                    border-radius: 50%;
+                "></div>
+                
+                <!-- Маркер пин -->
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 30px;
+                    height: 30px;
+                    background:  ${color};
+                    border:  3px solid white;
+                    border-radius: 50% 50% 50% 0;
+                    transform: translateX(-50%) rotate(-45deg);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+                "></div>
+                
+                <!-- Иконка -->
+                <i class="fas ${iconClass}" style="
+                    position: absolute;
+                    top:  7px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: white;
+                    font-size: 14px;
+                    z-index: 1;
+                "></i>
+            </div>
+        `,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -42]
+    });
+};
 
 type LayerType = "standard" | "topo" | "satellite";
 type AutoFillMode = 'coords-elevation' | 'elevation' | 'none';
@@ -98,43 +175,6 @@ function LocationSelector({
 }
 
 
-
-const Toast = ({ message, type }: { message: string; type: "success" | "error" | "info" }) => (
-    <div
-        style={{
-            position: "fixed",
-            top: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "15px 25px",
-            borderRadius: "15px",
-            color: "#fff",
-            background:
-                type === "success"
-                    ? "rgba(0, 180, 100, 0.3)"
-                    : type === "error"
-                        ? "rgba(200, 50, 50, 0.3)"
-                        : "rgba(50, 100, 200, 0.3)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            zIndex: 3000,
-            fontWeight: 500,
-        }}
-    >
-        {message}
-    </div>
-);
-
-// Helper function to translate terrain point types
-const getTypeLabel = (type: string): string => {
-    const types: Record<string, string> = {
-        'TAKEOFF': 'Точка взлёта',
-        'LANDING_ZONE': 'Зона посадки',
-        'BEACON': 'Путевая точка',
-        'LANDMARK': 'Ориентир',
-    };
-    return types[type] || type;
-};
 
 const MapView: React.FC = () => {
     // Performance profiling
@@ -425,65 +465,52 @@ const MapView: React.FC = () => {
 
                 {/* Terrain point markers */}
                 {visibleTerrainPoints.map((tp) => (
-                    <Marker 
-                        key={tp.id} 
-                        position={[tp.latitude, tp.longitude]}
-                        icon={terrainPointIcon}
+                    <Marker
+                        key={tp.id}
+                        position={[tp. latitude, tp.longitude]}
+                        icon={getTerrainPointIcon(tp.type)} // ✅ Используем функцию вместо константы
                     >
                         <Popup>
                             <div style={{
-                                background: '#ffffff',
-                                border: '1px solid rgba(0,0,0,0.1)',
-                                borderRadius: '12px',
-                                padding: '15px',
-                                minWidth: '250px',
-                                color: '#000',
+                                padding: '10px',
+                                minWidth: '200px',
                             }}>
-                                {/* Заголовок с иконкой типа */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                    <span style={{ fontSize: 24 }}>
-                                        {tp.type === 'TAKEOFF' ? '🛫' : 
-                                         tp.type === 'LANDING_ZONE' ? '🛬' :
-                                         tp.type === 'BEACON' ? '📍' : '🗺️'}
-                                    </span>
-                                    <h4 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>
-                                        {tp.name}
-                                    </h4>
-                                </div>
-
-                                {/* Информационный блок */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                    <div style={{ 
-                                        padding: '6px 10px', 
-                                        background: 'rgba(46,213,115,0.1)', 
-                                        borderRadius: 8,
-                                        borderLeft: '3px solid #2ecc71'
-                                    }}>
-                                        <strong>Тип:</strong> {getTypeLabel(tp.type)}
-                                    </div>
-
-                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                                        <strong>Высота:</strong> <span>{tp.elevation} m</span>
-                                    </p>
-
-                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                                        <strong>Широта:</strong> <span>{tp.latitude.toFixed(5)}</span>
-                                    </p>
-
-                                    <p style={{ margin: 0, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                                        <strong>Долгота:</strong> <span>{tp.longitude.toFixed(5)}</span>
-                                    </p>
-                                </div>
-
+                                <h4 style={{
+                                    margin: '0 0 8px 0',
+                                    fontSize: 16,
+                                    fontWeight:  600,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap:  8
+                                }}>
+                    <span style={{ fontSize: 20 }}>
+                        {TERRAIN_EMOJI[tp.type as keyof typeof TERRAIN_EMOJI] || '📍'}
+                    </span>
+                                    {tp.name}
+                                </h4>
+                                <p style={{
+                                    margin: '4px 0',
+                                    fontSize: 13,
+                                    color:  TERRAIN_COLORS[tp.type as keyof typeof TERRAIN_COLORS] || '#9b59b6',
+                                    fontWeight: 600
+                                }}>
+                                    {TERRAIN_LABELS[tp.type as keyof typeof TERRAIN_LABELS] || tp.type}
+                                </p>
+                                <p style={{ margin: '4px 0', fontSize: 13 }}>
+                                    <strong>Координаты:</strong> {tp. latitude. toFixed(4)}, {tp.longitude.toFixed(4)}
+                                </p>
+                                <p style={{ margin: '4px 0', fontSize: 13 }}>
+                                    <strong>Высота:</strong> {tp.elevation} m
+                                </p>
                                 {tp.description && (
-                                    <p style={{ 
-                                        margin: '12px 0 0 0', 
-                                        fontSize: 13, 
+                                    <p style={{
+                                        margin: '8px 0 0 0',
+                                        fontSize: 12,
                                         fontStyle: 'italic',
                                         color: '#555',
-                                        padding: '8px',
-                                        background: 'rgba(0,0,0,0.03)',
-                                        borderRadius: 8,
+                                        padding: 8,
+                                        background: 'rgba(0,0,0,0.05)',
+                                        borderRadius: 6
                                     }}>
                                         {tp.description}
                                     </p>
@@ -1001,6 +1028,7 @@ const MapView: React.FC = () => {
                     fetchElevation={fetchElevationForPosition}
                 />
             </Modal>
+
 
             {/* Performance Monitor */}
             {performanceMonitorEnabled && <PerformanceMonitor />}
