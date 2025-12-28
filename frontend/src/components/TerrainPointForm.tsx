@@ -48,11 +48,16 @@ export default function TerrainPointForm({
             ...prev,
             name: initialData.name ?? prev.name,
             type: (initialData.type as string) ?? prev.type,
-            latitude: initialData.latitude ?? prev.latitude,
-            longitude: initialData.longitude ?? prev.longitude,
+            // Only update coordinates if autoFillMode allows it
+            latitude: (autoFillMode === 'coords-elevation' && initialData.latitude != null) 
+                ? initialData.latitude 
+                : prev.latitude,
+            longitude: (autoFillMode === 'coords-elevation' && initialData.longitude != null) 
+                ? initialData.longitude 
+                : prev.longitude,
             description: initialData.description ?? prev.description,
         }));
-    }, [initialData]);
+    }, [initialData, autoFillMode]);
 
     // Auto-fill elevation when form opens
     useEffect(() => {
@@ -85,12 +90,16 @@ export default function TerrainPointForm({
         e.preventDefault();
         if (!formData.name) return; // simple guard
         onSubmit(formData);
-        // Reset form after submission
+        // Reset form after submission - respect autoFillMode
         setFormData({
             name: "",
             type: "BEACON",
-            latitude: initialData?.latitude ?? 0,
-            longitude: initialData?.longitude ?? 0,
+            latitude: (autoFillMode === 'coords-elevation' && initialData?.latitude != null) 
+                ? initialData.latitude 
+                : 0,
+            longitude: (autoFillMode === 'coords-elevation' && initialData?.longitude != null) 
+                ? initialData.longitude 
+                : 0,
             elevation: 0,
             description: "",
         });

@@ -60,11 +60,15 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(formData);
-        // Reset form after submission
+        // Reset form after submission - respect autoFillMode
         setFormData({
             name: "",
-            latitude: initialSpot?.latitude ?? 0,
-            longitude: initialSpot?.longitude ?? 0,
+            latitude: (autoFillMode === 'coords-elevation' && initialSpot?.latitude != null) 
+                ? initialSpot.latitude 
+                : 0,
+            longitude: (autoFillMode === 'coords-elevation' && initialSpot?.longitude != null) 
+                ? initialSpot.longitude 
+                : 0,
             elevation: 0,
             description: "",
             suitableWinds: "",
