@@ -45,6 +45,15 @@ const terrainPointIcon = new L.Icon({
 });
 
 type LayerType = "standard" | "topo" | "satellite";
+type AutoFillMode = 'coords-elevation' | 'elevation' | 'none';
+
+// Helper function to validate and parse auto-fill mode from localStorage
+const parseAutoFillMode = (value: string | null): AutoFillMode => {
+    if (value === 'coords-elevation' || value === 'elevation' || value === 'none') {
+        return value;
+    }
+    return 'none';
+};
 
 interface LocationSelectorProps {
     onSelect: (lat: number, lng: number) => void;
@@ -130,13 +139,9 @@ const MapView: React.FC = () => {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [elevationEnabled, setElevationEnabled] = useState(false);
-    const [autoFillMode, setAutoFillMode] = useState<'coords-elevation' | 'elevation' | 'none'>(() => {
-        const saved = localStorage.getItem('autoFillMode');
-        if (saved === 'coords-elevation' || saved === 'elevation' || saved === 'none') {
-            return saved;
-        }
-        return 'none';
-    });
+    const [autoFillMode, setAutoFillMode] = useState<AutoFillMode>(() => 
+        parseAutoFillMode(localStorage.getItem('autoFillMode'))
+    );
 
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
     const [contextMenuData, setContextMenuData] = useState<{ lat: number; lng: number } | null>(null);
@@ -191,10 +196,13 @@ const MapView: React.FC = () => {
     // Uses Web Mercator projection (EPSG:3857) to convert geographic coordinates
     // to tile coordinates in the XYZ tile scheme used by most web map services
     const getTileCoords = (lat: number, lng: number, zoom: number) => {
+        // Clamp latitude to valid Web Mercator range to avoid mathematical errors
+        const clampedLat = Math.max(-85.0511, Math.min(85.0511, lat));
+        
         // X coordinate: simple linear mapping from longitude
         const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
         // Y coordinate: inverse Mercator projection for latitude
-        const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+        const y = Math.floor((1 - Math.log(Math.tan(clampedLat * Math.PI / 180) + 1 / Math.cos(clampedLat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
         return { x, y, z: zoom };
     };
 

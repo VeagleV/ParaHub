@@ -11,13 +11,13 @@ interface SpotFormProps {
 export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none', fetchElevation }: SpotFormProps) {
     const [formData, setFormData] = useState<Spot>({
         name: initialSpot?.name || "",
-        latitude: initialSpot?.latitude || 0,
-        longitude: initialSpot?.longitude || 0,
-        elevation: initialSpot?.elevation || 0,
+        latitude: initialSpot?.latitude ?? 0,
+        longitude: initialSpot?.longitude ?? 0,
+        elevation: initialSpot?.elevation ?? 0,
         description: initialSpot?.description || "",
         suitableWinds: initialSpot?.suitableWinds || "",
-        xcDifficulty: initialSpot?.xcDifficulty || 1,
-        learningDifficulty: initialSpot?.learningDifficulty || 1,
+        xcDifficulty: initialSpot?.xcDifficulty ?? 1,
+        learningDifficulty: initialSpot?.learningDifficulty ?? 1,
         accessibility: initialSpot?.accessibility || "",
         popularity: initialSpot?.popularity || "",
     });
@@ -47,8 +47,8 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
         // Reset form after submission
         setFormData({
             name: "",
-            latitude: initialSpot?.latitude || 0,
-            longitude: initialSpot?.longitude || 0,
+            latitude: initialSpot?.latitude ?? 0,
+            longitude: initialSpot?.longitude ?? 0,
             elevation: 0,
             description: "",
             suitableWinds: "",
