@@ -153,7 +153,10 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                         type="number"
                         step="any"
                         value={formData.latitude}
-                        onChange={(e) => handleChange("latitude", parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("latitude", isNaN(parsed) ? 0 : parsed);
+                        }}
                         style={inputStyle}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
@@ -166,7 +169,10 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                         type="number"
                         step="any"
                         value={formData.longitude}
-                        onChange={(e) => handleChange("longitude", parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("longitude", isNaN(parsed) ? 0 : parsed);
+                        }}
                         style={inputStyle}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
