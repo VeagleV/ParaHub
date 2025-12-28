@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 
 /**
- * Aspect для автоматического профилирования методов
- * Логирует в консоль и в файл logs/profiling.log
+ * Aspect for automatic method profiling
+ * Logs to console and to logs/profiling.log file
  */
 @Aspect
 @Component
@@ -23,7 +23,7 @@ public class ProfilingAspect {
     private static final Logger profilingLogger = LoggerFactory.getLogger("PROFILING");
 
     /**
-     * Профилирование всех методов в @Service классах
+     * Profile all methods in @Service classes
      */
     @Around("@within(org.springframework.stereotype.Service)")
     public Object profileServiceMethods(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -31,7 +31,7 @@ public class ProfilingAspect {
     }
 
     /**
-     * Профилирование всех методов в @RestController классах
+     * Profile all methods in @RestController classes
      */
     @Around("@within(org.springframework.web.bind.annotation.RestController)")
     public Object profileControllerMethods(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -39,7 +39,7 @@ public class ProfilingAspect {
     }
 
     /**
-     * Профилирование всех методов помеченных @Profiled
+     * Profile all methods annotated with @Profiled
      */
     @Around("@annotation(profiled)")
     public Object profileAnnotatedMethods(ProceedingJoinPoint joinPoint, Profiled profiled) throws Throwable {
@@ -103,7 +103,7 @@ public class ProfilingAspect {
     }
 
     /**
-     * Логирование одновременно в консоль и в файл
+     * Log to both console and file
      */
     private void logBoth(String message) {
         logger.info(message);

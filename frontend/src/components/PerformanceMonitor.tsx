@@ -42,9 +42,9 @@ export const PerformanceMonitor: React.FC = () => {
         .slice(0, 10);
 
     const getColor = (duration: number): string => {
-        if (duration < 50) return '#2ecc71'; // Зелёный
-        if (duration < 100) return '#f39c12'; // Оранжевый
-        return '#e74c3c'; // Красный
+        if (duration < 50) return '#2ecc71'; // Green
+        if (duration < 100) return '#f39c12'; // Orange
+        return '#e74c3c'; // Red
     };
 
     const getEmoji = (duration: number): string => {
