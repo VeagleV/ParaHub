@@ -146,7 +146,8 @@ const MapView: React.FC = () => {
             const savedSpot = await createSpot(data);
 
             setSpots([...spots, savedSpot]);
-            setModalOpen(false);
+            setSpotFormOpen(false); // Close the spot form modal
+            setModalOpen(false); // Also close the legacy modal state
             setNewSpot(null);
             showToast("Старт успешно добавлен!", "success");
         } catch (err) {
@@ -223,11 +224,22 @@ const MapView: React.FC = () => {
                         top: 20,
                         left: "50%",
                         transform: "translateX(-50%)",
-                        background: "rgba(0,0,0,0.6)",
+                        background: 
+                            toast.type === "success"
+                                ? "rgba(0, 200, 120, 0.3)"
+                                : toast.type === "error"
+                                    ? "rgba(220, 60, 60, 0.3)"
+                                    : "rgba(30, 144, 255, 0.3)",
+                        backdropFilter: "blur(15px)",
+                        border: "1px solid rgba(255,255,255,0.3)",
                         color: "#fff",
-                        padding: "10px 20px",
-                        borderRadius: 12,
+                        padding: "15px 30px",
+                        borderRadius: 15,
                         zIndex: 3000,
+                        fontWeight: 500,
+                        fontSize: 15,
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                        animation: "slideDown 0.3s ease",
                     }}
                 >
                     {toast.message}
@@ -271,17 +283,33 @@ const MapView: React.FC = () => {
                         position: "fixed",
                         top: contextMenuPos.y,
                         left: contextMenuPos.x,
-                        background: "rgba(0,0,0,0.8)",
+                        background: "rgba(20,20,20,0.9)",
                         color: "#fff",
-                        padding: 10,
-                        borderRadius: 10,
+                        padding: 12,
+                        borderRadius: 15,
                         zIndex: 5000,
-                        backdropFilter: "blur(5px)",
+                        backdropFilter: "blur(15px)",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                        minWidth: 180,
                     }}
                     onClick={(e) => e.stopPropagation()} // prevent menu from closing when clicking inside
                 >
                     <div
-                        style={{ cursor: "pointer", padding: 5 }}
+                        style={{ 
+                            cursor: "pointer", 
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            transition: "all 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(30,144,255,0.3)";
+                            e.currentTarget.style.transform = "translateX(4px)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.transform = "translateX(0)";
+                        }}
                         onClick={() => {
                             setNewSpot({ latitude: contextMenuData!.lat, longitude: contextMenuData!.lng });
                             setSpotFormOpen(true);
@@ -291,7 +319,20 @@ const MapView: React.FC = () => {
                         ➕ Add Spot
                     </div>
                     <div
-                        style={{ cursor: "pointer", padding: 5 }}
+                        style={{ 
+                            cursor: "pointer", 
+                            padding: "8px 12px",
+                            borderRadius: 10,
+                            transition: "all 0.3s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(30,144,255,0.3)";
+                            e.currentTarget.style.transform = "translateX(4px)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.transform = "translateX(0)";
+                        }}
                         onClick={() => {
                             setTerrainFormOpen(true);
                             setContextMenuPos(null);
@@ -313,36 +354,37 @@ const MapView: React.FC = () => {
                     flexDirection: "column",
                     gap: 10,
                     zIndex: 1000,
-                    background: "rgba(255,255,255,0.1)",
-                    padding: 10,
-                    borderRadius: 15,
-                    backdropFilter: "blur(10px)",
+                    background: "rgba(255,255,255,0.15)",
+                    padding: 12,
+                    borderRadius: 20,
+                    backdropFilter: "blur(15px)",
                     border: "1px solid rgba(255,255,255,0.3)",
+                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+                    transition: "all 0.3s ease",
                 }}
             >
-                {/*<button
-                    style={{
-                        background: "rgba(0,150,255,0.3)",
-                        border: "none",
-                        padding: "10px 15px",
-                        borderRadius: 10,
-                        color: "#fff",
-                        cursor: "pointer",
-                    }}
-                    onClick={handleAddClick}
-                >
-                    Добавить старт
-                </button>*/}
-
                 {/* Settings button */}
                 <button
+                    aria-label="Открыть настройки"
                     style={{
-                        background: "rgba(100,100,100,0.3)",
-                        border: "none",
+                        background: "rgba(100,100,100,0.4)",
+                        border: "1px solid rgba(255,255,255,0.2)",
                         padding: "10px 15px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         color: "#fff",
                         cursor: "pointer",
+                        fontWeight: 500,
+                        transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(100,100,100,0.6)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(100,100,100,0.4)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
                     }}
                     onClick={() => setSettingsOpen(true)}
                 >
@@ -355,22 +397,27 @@ const MapView: React.FC = () => {
                 isOpen={settingsOpen}
                 onRequestClose={() => setSettingsOpen(false)}
                 style={{
-                    overlay: { backgroundColor: "rgba(0,0,0,0.4)", zIndex: 2000 },
+                    overlay: { 
+                        backgroundColor: "rgba(0,0,0,0.5)", 
+                        zIndex: 2000,
+                        backdropFilter: "blur(4px)",
+                    },
                     content: {
                         inset: "50% auto auto 50%",
                         transform: "translate(-50%, -50%)",
-                        width: 300,
+                        width: 320,
                         borderRadius: 25,
                         padding: 30,
                         background: "rgba(255, 255, 255, 0.15)",
                         backdropFilter: "blur(15px)",
                         border: "1px solid rgba(255,255,255,0.3)",
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
                         color: "#fff",
                         textAlign: "center",
                     },
                 }}
             >
-                <h2 style={{ marginBottom: 20 }}>Настройки</h2>
+                <h2 style={{ margin: "0 0 25px 0", fontSize: 24, fontWeight: 600 }}>Настройки</h2>
 
                 {/* Elevation toggle */}
                 <div
@@ -378,32 +425,36 @@ const MapView: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        marginBottom: 20,
+                        marginBottom: 25,
                     }}
                 >
-                    <span style={{ fontWeight: 500 }}>Показывать высоту</span>
+                    <span style={{ fontWeight: 500, fontSize: 15 }}>Показывать высоту</span>
                     <div
                         onClick={() => setElevationEnabled(!elevationEnabled)}
                         style={{
-                            width: 50,
-                            height: 26,
-                            borderRadius: 13,
-                            background: elevationEnabled ? "#4cd137" : "#ccc",
+                            width: 54,
+                            height: 28,
+                            borderRadius: 14,
+                            background: elevationEnabled 
+                                ? "linear-gradient(135deg, #4cd137 0%, #44bd32 100%)" 
+                                : "rgba(150, 150, 150, 0.5)",
                             position: "relative",
                             cursor: "pointer",
-                            transition: "background 0.3s",
+                            transition: "all 0.3s ease",
+                            border: "1px solid rgba(255,255,255,0.2)",
                         }}
                     >
                         <div
                             style={{
-                                width: 22,
-                                height: 22,
+                                width: 24,
+                                height: 24,
                                 borderRadius: "50%",
                                 background: "#fff",
                                 position: "absolute",
-                                top: 2,
-                                left: elevationEnabled ? 26 : 2,
-                                transition: "left 0.3s",
+                                top: 1.5,
+                                left: elevationEnabled ? 28 : 2,
+                                transition: "all 0.3s ease",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
                             }}
                         />
                     </div>
@@ -411,14 +462,28 @@ const MapView: React.FC = () => {
 
                 <button
                     onClick={() => setSettingsOpen(false)}
+                    aria-label="Закрыть настройки"
                     style={{
                         marginTop: 10,
-                        padding: "10px 20px",
-                        background: "rgba(0,150,255,0.4)",
-                        border: "none",
-                        borderRadius: 10,
+                        padding: "12px 24px",
+                        background: "rgba(30,144,255,0.6)",
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        borderRadius: 12,
                         cursor: "pointer",
                         color: "white",
+                        fontWeight: 600,
+                        fontSize: 15,
+                        transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(30,144,255,0.8)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(30,144,255,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(30,144,255,0.6)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
                     }}
                 >
                     Закрыть
@@ -432,34 +497,50 @@ const MapView: React.FC = () => {
                         position: "absolute",
                         bottom: 20,
                         left: 20,
-                        padding: "10px 15px",
-                        borderRadius: 12,
-                        background: "rgba(0,0,0,0.4)",
+                        padding: "12px 18px",
+                        borderRadius: 15,
+                        background: "rgba(20,20,20,0.6)",
+                        backdropFilter: "blur(15px)",
+                        border: "1px solid rgba(255,255,255,0.2)",
                         color: "#fff",
                         fontWeight: 500,
+                        fontSize: 14,
                         zIndex: 1000,
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
                     }}
                 >
-                    {`Возвышение: ${cursorElevation} m`}
+                    📍 Возвышение: <strong>{cursorElevation} m</strong>
                 </div>
             )}
 
             {/* Layer selector button */}
             <div style={{ position: "absolute", bottom: 20, right: 20, zIndex: 1000 }}>
                 <button
+                    aria-label="Выбрать слой карты"
                     onClick={() => setLayerPopupOpen(!layerPopupOpen)}
                     style={{
-                        width: 50,
-                        height: 50,
+                        width: 56,
+                        height: 56,
                         borderRadius: "50%",
-                        border: "none",
-                        background: "rgba(0,150,255,0.6)",
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        background: "rgba(30,144,255,0.6)",
+                        backdropFilter: "blur(10px)",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 24,
+                        fontSize: 26,
                         color: "#fff",
+                        boxShadow: "0 4px 16px rgba(30,144,255,0.3)",
+                        transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05)";
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(30,144,255,0.5)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "0 4px 16px rgba(30,144,255,0.3)";
                     }}
                 >
                     🗺️
@@ -468,15 +549,19 @@ const MapView: React.FC = () => {
                 {layerPopupOpen && (
                     <div
                         style={{
-                            marginTop: 10,
-                            width: 220,
+                            position: "absolute",
+                            bottom: 65,
+                            right: 0,
+                            width: 240,
                             background: "rgba(255,255,255,0.95)",
-                            borderRadius: 15,
-                            padding: 10,
+                            backdropFilter: "blur(15px)",
+                            borderRadius: 20,
+                            padding: 15,
                             display: "flex",
                             flexDirection: "column",
                             gap: 12,
-                            boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                            border: "1px solid rgba(255,255,255,0.3)",
                         }}
                     >
                         {(Object.keys(layers) as LayerType[]).map((layerKey) => (
@@ -489,15 +574,28 @@ const MapView: React.FC = () => {
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 10,
-                                    padding: 5,
-                                    borderRadius: 10,
+                                    gap: 12,
+                                    padding: 8,
+                                    borderRadius: 12,
                                     border:
                                         activeLayer === layerKey
                                             ? "2px solid #1E90FF"
-                                            : "1px solid rgba(0,0,0,0.2)",
+                                            : "1px solid rgba(0,0,0,0.15)",
                                     cursor: "pointer",
-                                    background: activeLayer === layerKey ? "rgba(30,144,255,0.1)" : "transparent",
+                                    background: activeLayer === layerKey ? "rgba(30,144,255,0.15)" : "transparent",
+                                    transition: "all 0.3s ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (activeLayer !== layerKey) {
+                                        e.currentTarget.style.background = "rgba(30,144,255,0.08)";
+                                        e.currentTarget.style.transform = "translateX(4px)";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (activeLayer !== layerKey) {
+                                        e.currentTarget.style.background = "transparent";
+                                        e.currentTarget.style.transform = "translateX(0)";
+                                    }
                                 }}
                             >
                                 <div
@@ -507,14 +605,15 @@ const MapView: React.FC = () => {
                                         borderRadius: 8,
                                         overflow: "hidden",
                                         border: "1px solid rgba(0,0,0,0.1)",
+                                        background: 
+                                            layerKey === "standard" 
+                                                ? "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)" 
+                                                : layerKey === "topo" 
+                                                    ? "linear-gradient(135deg, #d4a574 0%, #a8805f 100%)" 
+                                                    : "linear-gradient(135deg, #2d4a2b 0%, #4a7c59 100%)",
                                     }}
-                                >
-                                    <img
-                                        src={`https://maps.wikimedia.org/osm-intl/${layerKey === "standard" ? "0/0/0.png" : layerKey === "topo" ? "0/0/0.png" : "0/0/0.png"}`}
-                                        alt={layers[layerKey].label}
-                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                </div>
+                                    aria-label={`Preview ${layers[layerKey].label}`}
+                                />
                                 <div style={{ flex: 1, fontWeight: 500 }}>{layers[layerKey].label}</div>
                                 {activeLayer === layerKey && <div style={{ color: "#1E90FF", fontSize: 20 }}>✔</div>}
                             </div>
