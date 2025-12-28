@@ -222,11 +222,11 @@ const MapView: React.FC = () => {
 
 
     const layers: Record<LayerType, { url: string; label: string }> = {
-        standard: { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", label: "Standard" },
-        topo: { url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", label: "Topographic" },
+        standard: { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", label: "Схематическая карта" },
+        topo: { url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", label: "Топографическая карта" },
         satellite: {
             url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            label: "Satellite",
+            label: "Спутниковая карта",
         },
     };
 
