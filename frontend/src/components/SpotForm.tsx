@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { Spot } from "../types/Spot";
 
 interface SpotFormProps {
     initialSpot?: Partial<Spot>;
     onSubmit: (spot: Spot) => void;
+    autoFillMode?: 'coords-elevation' | 'elevation' | 'none';
+    fetchElevation?: (lat: number, lng: number) => Promise<number | null>;
 }
 
-export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
+export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none', fetchElevation }: SpotFormProps) {
     const [formData, setFormData] = useState<Spot>({
         name: initialSpot?.name || "",
-        latitude: initialSpot?.latitude || 0,
-        longitude: initialSpot?.longitude || 0,
-        elevation: initialSpot?.elevation || 0,
+        latitude: initialSpot?.latitude ?? 0,
+        longitude: initialSpot?.longitude ?? 0,
+        elevation: initialSpot?.elevation ?? 0,
         description: initialSpot?.description || "",
         suitableWinds: initialSpot?.suitableWinds || "",
-        xcDifficulty: initialSpot?.xcDifficulty || 1,
-        learningDifficulty: initialSpot?.learningDifficulty || 1,
+        xcDifficulty: initialSpot?.xcDifficulty ?? 1,
+        learningDifficulty: initialSpot?.learningDifficulty ?? 1,
         accessibility: initialSpot?.accessibility || "",
         popularity: initialSpot?.popularity || "",
     });
@@ -24,14 +26,29 @@ export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
         setFormData({ ...formData, [field]: value });
     };
 
+    // Auto-fill elevation when form opens
+    useEffect(() => {
+        const autoFillData = async () => {
+            if (initialSpot?.latitude == null || initialSpot?.longitude == null || !fetchElevation) return;
+            
+            if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
+                const elevation = await fetchElevation(initialSpot.latitude, initialSpot.longitude);
+                if (elevation !== null) {
+                    setFormData(prev => ({ ...prev, elevation }));
+                }
+            }
+        };
+        autoFillData();
+    }, [initialSpot?.latitude, initialSpot?.longitude, autoFillMode, fetchElevation]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(formData);
         // Reset form after submission
         setFormData({
             name: "",
-            latitude: initialSpot?.latitude || 0,
-            longitude: initialSpot?.longitude || 0,
+            latitude: initialSpot?.latitude ?? 0,
+            longitude: initialSpot?.longitude ?? 0,
             elevation: 0,
             description: "",
             suitableWinds: "",

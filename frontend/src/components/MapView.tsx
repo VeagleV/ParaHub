@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
     MapContainer,
     TileLayer,
@@ -23,13 +23,44 @@ import TerrainPointForm from "./TerrainPointForm.tsx";
 L.Icon.Default.mergeOptions({ iconUrl, shadowUrl });
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
+// Constants
+const ELEVATION_API_TIMEOUT = 10000; // 10 seconds
+
+// SVG for terrain point marker icon (green)
+const TERRAIN_POINT_SVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
+        <path fill="#2ecc71" stroke="#fff" stroke-width="2" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z"/>
+        <circle cx="12.5" cy="12.5" r="6" fill="#fff"/>
+    </svg>
+`;
+
+// Create custom icon for terrain points
+const terrainPointIcon = new L.Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(TERRAIN_POINT_SVG),
+    shadowUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
 type LayerType = "standard" | "topo" | "satellite";
+type AutoFillMode = 'coords-elevation' | 'elevation' | 'none';
+
+// Helper function to validate and parse auto-fill mode from localStorage
+const parseAutoFillMode = (value: string | null): AutoFillMode => {
+    if (value === 'coords-elevation' || value === 'elevation' || value === 'none') {
+        return value;
+    }
+    return 'none';
+};
 
 interface LocationSelectorProps {
     onSelect: (lat: number, lng: number) => void;
     setCursor: (lat: number, lng: number) => void;
     setContextMenuPos: (pos: { x: number; y: number } | null) => void;
     setContextMenuData: (data: { lat: number; lng: number } | null) => void;
+    setMapCenter: (center: { lat: number; lng: number; zoom: number }) => void;
 }
 
 
@@ -38,8 +69,9 @@ function LocationSelector({
                               setCursor,
                               setContextMenuPos,
                               setContextMenuData,
+                              setMapCenter,
                           }: LocationSelectorProps) {
-    useMapEvents({
+    const map = useMapEvents({
         click(e: L.LeafletMouseEvent) {
             setContextMenuPos(null); // close context menu
             onSelect(e.latlng.lat, e.latlng.lng);
@@ -54,6 +86,11 @@ function LocationSelector({
         },
         dragstart: () => setContextMenuPos(null),
         zoomstart: () => setContextMenuPos(null),
+        moveend: () => {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            setMapCenter({ lat: center.lat, lng: center.lng, zoom });
+        },
     });
     return null;
 }
@@ -102,12 +139,23 @@ const MapView: React.FC = () => {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [elevationEnabled, setElevationEnabled] = useState(false);
+    const [autoFillMode, setAutoFillMode] = useState<AutoFillMode>(() => 
+        parseAutoFillMode(localStorage.getItem('autoFillMode'))
+    );
 
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
     const [contextMenuData, setContextMenuData] = useState<{ lat: number; lng: number } | null>(null);
 
     const [spotFormOpen, setSpotFormOpen] = useState(false);
     const [terrainFormOpen, setTerrainFormOpen] = useState(false);
+
+    const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; zoom: number }>({ 
+        lat: 55.75, 
+        lng: 37.61, 
+        zoom: 5 
+    });
+
+    const [visibleTerrainPoints, setVisibleTerrainPoints] = useState<TerrainPoint[]>([]);
 
 
 
@@ -135,10 +183,52 @@ const MapView: React.FC = () => {
         fetchSpots();
     }, []);
 
+    useEffect(() => {
+        localStorage.setItem('autoFillMode', autoFillMode);
+    }, [autoFillMode]);
+
     const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
     };
+
+    // Helper function to get tile coordinates from lat/lng
+    // Uses Web Mercator projection (EPSG:3857) to convert geographic coordinates
+    // to tile coordinates in the XYZ tile scheme used by most web map services
+    const getTileCoords = (lat: number, lng: number, zoom: number) => {
+        // Clamp latitude to valid Web Mercator range to avoid mathematical errors
+        const clampedLat = Math.max(-85.0511, Math.min(85.0511, lat));
+        
+        // X coordinate: simple linear mapping from longitude
+        const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
+        // Y coordinate: inverse Mercator projection for latitude
+        const y = Math.floor((1 - Math.log(Math.tan(clampedLat * Math.PI / 180) + 1 / Math.cos(clampedLat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+        return { x, y, z: zoom };
+    };
+
+    // Memoize tile preview URLs to avoid recalculating on every render
+    const tilePreviewUrls = useMemo(() => {
+        const previewZoom = Math.min(mapCenter.zoom, 8);
+        const { x, y, z } = getTileCoords(mapCenter.lat, mapCenter.lng, previewZoom);
+        
+        return {
+            standard: layers.standard.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+            topo: layers.topo.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+            satellite: layers.satellite.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+        };
+    }, [mapCenter.lat, mapCenter.lng, mapCenter.zoom]);
 
     const handleSpotSave = async (data: Spot) => {
 
@@ -165,6 +255,47 @@ const MapView: React.FC = () => {
             console.error("❌ Ошибка при добавлении точки рельефа:", err);
             showToast("Не удалось добавить точку рельефа", "error");
         }
+    };
+
+    const handleShowRelatedPoints = (spot: Spot) => {
+        if (spot.terrainPoints && spot.terrainPoints.length > 0) {
+            setVisibleTerrainPoints(spot.terrainPoints);
+            showToast(`Показаны ${spot.terrainPoints.length} точек рельефа для ${spot.name}`, "info");
+        }
+    };
+
+    const fetchElevationForPosition = async (lat: number, lng: number): Promise<number | null> => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), ELEVATION_API_TIMEOUT);
+            
+            const res = await fetch(
+                `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`,
+                { signal: controller.signal }
+            );
+            
+            clearTimeout(timeoutId);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                return Math.round(data.results[0].elevation);
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                if (err.name === 'AbortError') {
+                    console.error("Elevation fetch timeout");
+                    showToast("Timeout получения высоты", "error");
+                } else {
+                    console.error("Elevation fetch error:", err);
+                    showToast("Ошибка получения высоты", "error");
+                }
+            }
+        }
+        return null;
     };
 
 
@@ -261,7 +392,37 @@ const MapView: React.FC = () => {
                                 onAddTerrainPoint={(s) => {
                                     console.log("Add terrain point for spot:", s);
                                 }}
+                                onShowRelatedPoints={handleShowRelatedPoints}
                             />
+                        </Popup>
+                    </Marker>
+                ))}
+
+                {/* Terrain point markers */}
+                {visibleTerrainPoints.map((tp) => (
+                    <Marker 
+                        key={tp.id} 
+                        position={[tp.latitude, tp.longitude]}
+                        icon={terrainPointIcon}
+                    >
+                        <Popup>
+                            <div style={{
+                                padding: '10px',
+                                minWidth: '200px',
+                            }}>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 600 }}>{tp.name}</h4>
+                                <p style={{ margin: '4px 0', fontSize: 13 }}>
+                                    <strong>Тип:</strong> {tp.type}
+                                </p>
+                                <p style={{ margin: '4px 0', fontSize: 13 }}>
+                                    <strong>Высота:</strong> {tp.elevation} m
+                                </p>
+                                {tp.description && (
+                                    <p style={{ margin: '8px 0 0 0', fontSize: 12, fontStyle: 'italic', color: '#555' }}>
+                                        {tp.description}
+                                    </p>
+                                )}
+                            </div>
                         </Popup>
                     </Marker>
                 ))}
@@ -273,6 +434,7 @@ const MapView: React.FC = () => {
                     setCursor={(lat, lng) => setCursorPos({ lat, lng })}
                     setContextMenuPos={setContextMenuPos}
                     setContextMenuData={setContextMenuData}
+                    setMapCenter={setMapCenter}
                 />
 
             </MapContainer>
@@ -405,7 +567,7 @@ const MapView: React.FC = () => {
                     content: {
                         inset: "50% auto auto 50%",
                         transform: "translate(-50%, -50%)",
-                        width: 320,
+                        width: 380,
                         borderRadius: 25,
                         padding: 30,
                         background: "rgba(255, 255, 255, 0.15)",
@@ -457,6 +619,62 @@ const MapView: React.FC = () => {
                                 boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
                             }}
                         />
+                    </div>
+                </div>
+
+                {/* Auto-fill coordinates setting */}
+                <div
+                    style={{
+                        marginBottom: 25,
+                        textAlign: 'left',
+                    }}
+                >
+                    <span style={{ fontWeight: 500, fontSize: 15, display: 'block', marginBottom: 12 }}>
+                        Автозаполнение координат
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {[
+                            { value: 'coords-elevation' as const, label: 'Координаты + высота' },
+                            { value: 'elevation' as const, label: 'Только высота' },
+                            { value: 'none' as const, label: 'Ничего' },
+                        ].map((option) => (
+                            <label
+                                key={option.value}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    cursor: 'pointer',
+                                    padding: '8px 12px',
+                                    borderRadius: 10,
+                                    background: autoFillMode === option.value ? 'rgba(30,144,255,0.3)' : 'rgba(255,255,255,0.05)',
+                                    transition: 'all 0.3s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (autoFillMode !== option.value) {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (autoFillMode !== option.value) {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                    }
+                                }}
+                            >
+                                <input
+                                    type="radio"
+                                    name="autoFillMode"
+                                    value={option.value}
+                                    checked={autoFillMode === option.value}
+                                    onChange={(e) => setAutoFillMode(e.target.value as 'coords-elevation' | 'elevation' | 'none')}
+                                    style={{
+                                        cursor: 'pointer',
+                                        accentColor: '#1E90FF',
+                                    }}
+                                />
+                                <span style={{ fontSize: 14 }}>{option.label}</span>
+                            </label>
+                        ))}
                     </div>
                 </div>
 
@@ -605,16 +823,13 @@ const MapView: React.FC = () => {
                                         borderRadius: 8,
                                         overflow: "hidden",
                                         border: "1px solid rgba(0,0,0,0.1)",
-                                        background: 
-                                            layerKey === "standard" 
-                                                ? "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)" 
-                                                : layerKey === "topo" 
-                                                    ? "linear-gradient(135deg, #d4a574 0%, #a8805f 100%)" 
-                                                    : "linear-gradient(135deg, #2d4a2b 0%, #4a7c59 100%)",
+                                        backgroundImage: `url(${tilePreviewUrls[layerKey]})`,
+                                        backgroundSize: "cover",
+                                        backgroundPosition: "center",
                                     }}
                                     aria-label={`Preview ${layers[layerKey].label}`}
                                 />
-                                <div style={{ flex: 1, fontWeight: 500 }}>{layers[layerKey].label}</div>
+                                <div style={{ flex: 1, fontWeight: 500, color: '#1a1a1a' }}>{layers[layerKey].label}</div>
                                 {activeLayer === layerKey && <div style={{ color: "#1E90FF", fontSize: 20 }}>✔</div>}
                             </div>
                         ))}
@@ -651,6 +866,8 @@ const MapView: React.FC = () => {
                     initialSpot={contextMenuData ?
                             {latitude : contextMenuData.lat, longitude: contextMenuData.lng} : undefined}
                     onSubmit={handleSpotSave}
+                    autoFillMode={autoFillMode}
+                    fetchElevation={fetchElevationForPosition}
                 />
             </Modal>
 
@@ -681,6 +898,8 @@ const MapView: React.FC = () => {
                     spots={spots}
                     onSubmit={handleTerrainSubmit}
                     onCancel={() => setTerrainFormOpen(false)}
+                    autoFillMode={autoFillMode}
+                    fetchElevation={fetchElevationForPosition}
                 />
             </Modal>
 
