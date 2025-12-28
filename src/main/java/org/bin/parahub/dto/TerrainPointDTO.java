@@ -3,10 +3,12 @@ package org.bin.parahub.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.ToString;
 import org.bin.parahub.enums.PointType;
 
 
 @Data
+@ToString
 public class TerrainPointDTO {
 
 

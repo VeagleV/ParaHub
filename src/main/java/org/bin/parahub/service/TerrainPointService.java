@@ -2,6 +2,7 @@ package org.bin.parahub.service;
 
 
 import jakarta.transaction.Transactional;
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.TerrainPointDTO;
 import org.bin.parahub.entity.Spot;
 import org.bin.parahub.entity.TerrainPoint;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Profiled
 public class TerrainPointService {
 
     private final SpotRepository spotRepository;

@@ -2,6 +2,7 @@ package org.bin.parahub.controller;
 
 
 import jakarta.validation.Valid;
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.TerrainPointDTO;
 import org.bin.parahub.entity.TerrainPoint;
 import org.bin.parahub.service.TerrainPointService;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/terrain_points")
+@Profiled(logArgs = true, logResult = false)
 public class TerrainPointController {
 
     private final TerrainPointService terrainPointService;

@@ -2,6 +2,7 @@ package org.bin.parahub.controller;
 
 
 import jakarta.validation.Valid;
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.SpotDTO;
 import org.bin.parahub.service.SpotService;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/spots")
+@Profiled(logArgs = true, logResult = false)
 public class SpotController {
 
     private final SpotService spotService;

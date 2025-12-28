@@ -9,10 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-
 /**
- * Aspect for automatic method profiling
+ * Aspect for profiling methods/classes annotated with @Profiled
  * Logs to console and to logs/profiling.log file
  */
 @Aspect
@@ -23,50 +21,31 @@ public class ProfilingAspect {
     private static final Logger profilingLogger = LoggerFactory.getLogger("PROFILING");
 
     /**
-     * Profile all methods in @Service classes
+     * Профилирование ТОЛЬКО методов/классов с аннотацией @Profiled
      */
-    @Around("@within(org.springframework.stereotype.Service)")
-    public Object profileServiceMethods(ProceedingJoinPoint joinPoint) throws Throwable {
-        return profileMethod(joinPoint, true, false, 100);
-    }
-
-    /**
-     * Profile all methods in @RestController classes
-     */
-    @Around("@within(org.springframework.web.bind.annotation.RestController)")
-    public Object profileControllerMethods(ProceedingJoinPoint joinPoint) throws Throwable {
-        return profileMethod(joinPoint, true, false, 200);
-    }
-
-    /**
-     * Profile all methods annotated with @Profiled
-     */
-    @Around("@annotation(profiled)")
+    @Around("@annotation(profiled) || (@within(profiled) && execution(* *(..)))")
     public Object profileAnnotatedMethods(ProceedingJoinPoint joinPoint, Profiled profiled) throws Throwable {
-        return profileMethod(joinPoint, profiled.logArgs(), profiled.logResult(), profiled.slowThresholdMs());
+        return profileMethod(joinPoint, profiled);
     }
 
-    /**
-     * Profiling for mapper methods
-     */
-    @Around("execution(* org.bin.parahub.mapper..*(..))")
-    public Object profileMapperMethods(ProceedingJoinPoint joinPoint) throws Throwable {
-        return profileMethod(joinPoint, false, false, 50);
-    }
-
-    private Object profileMethod(ProceedingJoinPoint joinPoint, boolean logArgs, boolean logResult, long slowThreshold) throws Throwable {
+    private Object profileMethod(ProceedingJoinPoint joinPoint, Profiled profiled) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         String className = signature.getDeclaringType().getSimpleName();
         String methodName = signature.getName();
         String fullMethodName = className + "#" + methodName;
 
-        // Log method start
-        if (logArgs) {
-            Object[] args = joinPoint.getArgs();
-            String argsStr = args.length > 0 ? Arrays.toString(args) : "[]";
-            logBoth(String.format("▶ [%s] START - Args: %s", fullMethodName, argsStr));
-        } else {
-            logBoth(String.format("▶ [%s] START", fullMethodName));
+        // 1. ОТКУДА ВЫЗВАН (Caller information)
+        String caller = getCallerInfo();
+
+        // 2. АРГУМЕНТЫ метода
+        Object[] args = joinPoint.getArgs();
+        String[] paramNames = signature.getParameterNames();
+        String argsStr = formatArguments(args, paramNames);
+
+        // 3. Логируем НАЧАЛО с caller и аргументами
+        logBoth(String.format("▶ [%s] CALLED FROM: %s", fullMethodName, caller));
+        if (profiled.logArgs() && args.length > 0) {
+            logBoth(String.format("  📥 Arguments: %s", argsStr));
         }
 
         long startTime = System.currentTimeMillis();
@@ -75,35 +54,142 @@ public class ProfilingAspect {
 
         try {
             result = joinPoint.proceed();
+            return result;
         } catch (Throwable e) {
             exception = e;
             throw e;
         } finally {
             long executionTime = System.currentTimeMillis() - startTime;
 
-            // Log execution result
+            // 4. Логируем РЕЗУЛЬТАТ
             if (exception != null) {
-                logBoth(String.format("✗ [%s] FAILED in %d ms - Exception: %s", 
-                    fullMethodName, executionTime, exception.getClass().getSimpleName()));
+                logBoth(String.format("✗ [%s] FAILED in %d ms", fullMethodName, executionTime));
+                logBoth(String.format("  ❌ Exception: %s - %s", 
+                    exception.getClass().getSimpleName(), 
+                    exception.getMessage()));
             } else {
-                if (executionTime > slowThreshold) {
-                    logBoth(String.format("⚠ SLOW METHOD: [%s] took %d ms (threshold: %d ms)", 
-                        fullMethodName, executionTime, slowThreshold));
+                if (executionTime > profiled.slowThresholdMs()) {
+                    logBoth(String.format("⚠ SLOW: [%s] took %d ms (threshold: %d ms)", 
+                        fullMethodName, executionTime, profiled.slowThresholdMs()));
                 } else {
                     logBoth(String.format("✓ [%s] COMPLETED in %d ms", fullMethodName, executionTime));
                 }
 
-                if (logResult && result != null) {
-                    logBoth(String.format("  Result: %s", result.toString()));
+                // 5. ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ
+                if (profiled.logResult() && result != null) {
+                    String resultStr = formatResult(result);
+                    logBoth(String.format("  📤 Result: %s", resultStr));
                 }
             }
         }
-        
-        return result;
     }
 
     /**
-     * Log to both console and file
+     * Получить информацию о том, ОТКУДА вызван метод (caller)
+     */
+    private String getCallerInfo() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        
+        // Пропускаем первые элементы стека (getStackTrace, getCallerInfo, profileMethod, invoke)
+        for (int i = 4; i < stackTrace.length; i++) {
+            StackTraceElement element = stackTrace[i];
+            String className = element.getClassName();
+            
+            // Пропускаем Spring и JDK классы
+            if (!className.startsWith("org.springframework") 
+                && !className.startsWith("java.") 
+                && !className.startsWith("jdk.") 
+                && !className.contains("$$") // Пропускаем прокси
+                && !className.contains("CGLIB")) {
+                
+                return String.format("%s.%s:%d", 
+                    element.getClassName().substring(element.getClassName().lastIndexOf('.') + 1),
+                    element.getMethodName(),
+                    element.getLineNumber());
+            }
+        }
+        
+        return "Unknown";
+    }
+
+    /**
+     * Форматировать аргументы с именами параметров
+     */
+    private String formatArguments(Object[] args, String[] paramNames) {
+        if (args == null || args.length == 0) {
+            return "[]";
+        }
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) sb.append(", ");
+            
+            String paramName = (paramNames != null && i < paramNames.length) 
+                ? paramNames[i] 
+                : "arg" + i;
+            
+            Object arg = args[i];
+            String argValue = formatValue(arg);
+            
+            sb.append(paramName).append("=").append(argValue);
+        }
+        sb.append("]");
+        
+        return sb.toString();
+    }
+
+    /**
+     * Форматировать результат
+     */
+    private String formatResult(Object result) {
+        return formatValue(result);
+    }
+
+    /**
+     * Форматировать значение (аргумент или результат)
+     */
+    private String formatValue(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        
+        // Примитивы и строки
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value.toString();
+        }
+        
+        // Коллекции
+        if (value instanceof java.util.Collection) {
+            java.util.Collection<?> coll = (java.util.Collection<?>) value;
+            return String.format("%s[size=%d]", value.getClass().getSimpleName(), coll.size());
+        }
+        
+        // Массивы
+        if (value.getClass().isArray()) {
+            return String.format("%s[length=%d]", value.getClass().getSimpleName(), 
+                java.lang.reflect.Array.getLength(value));
+        }
+        
+        // DTO объекты - попытка вывести toString
+        try {
+            String str = value.toString();
+            // Если toString не переопределён, выводим тип + hashCode
+            if (str.contains("@")) {
+                return String.format("%s@%s", value.getClass().getSimpleName(), 
+                    Integer.toHexString(value.hashCode()));
+            }
+            // Ограничиваем длину вывода
+            if (str.length() > 200) {
+                return str.substring(0, 197) + "...";
+            }
+            return str;
+        } catch (Exception e) {
+            return value.getClass().getSimpleName();
+        }
+    }
+
+    /**
+     * Логирование одновременно в консоль и в файл
      */
     private void logBoth(String message) {
         logger.info(message);

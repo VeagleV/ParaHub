@@ -1,5 +1,6 @@
 package org.bin.parahub.mapper;
 
+import org.bin.parahub.annotation.Profiled;
 import org.bin.parahub.dto.SpotDTO;
 import org.bin.parahub.entity.Spot;
 import org.bin.parahub.entity.TerrainPoint;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
  * @see SpotDTO
  */
 @Component
+@Profiled(logArgs = true, logResult = false, slowThresholdMs = 50)
 public class SpotMapper {
 
     private final TerrainPointMapper terrainPointMapper;

@@ -6,24 +6,33 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for method profiling
- * Automatically logs execution time, arguments and results
+ * Аннотация для профилирования методов/классов
+ * 
+ * Использование:
+ * 
+ * На методе:
+ * @Profiled(logArgs = true, logResult = true)
+ * public SpotDTO getSpotById(long id) { ... }
+ * 
+ * На классе (все public методы):
+ * @Profiled
+ * public class SpotService { ... }
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Profiled {
     /**
-     * Whether to log method arguments
+     * Логировать ли аргументы метода
      */
     boolean logArgs() default true;
     
     /**
-     * Whether to log execution result
+     * Логировать ли результат выполнения
      */
-    boolean logResult() default false;
+    boolean logResult() default true;
     
     /**
-     * Slow execution threshold in milliseconds
+     * Порог медленного выполнения в миллисекундах
      */
     long slowThresholdMs() default 100;
 }
