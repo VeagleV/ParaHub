@@ -1,4 +1,28 @@
 :root {
+  /* Liquid Glass Theme Variables */
+  --glass-bg-primary: rgba(255, 255, 255, 0.1);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.15);
+  --glass-bg-tertiary: rgba(255, 255, 255, 0.2);
+  
+  --glass-accent: rgba(30, 144, 255, 0.6);
+  --glass-success: rgba(0, 200, 120, 0.6);
+  --glass-error: rgba(220, 60, 60, 0.6);
+  
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-border-strong: rgba(255, 255, 255, 0.3);
+  
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --glass-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
+  --glass-blur: blur(10px);
+  --glass-blur-strong: blur(15px);
+  
+  --transition-default: all 0.3s ease;
+  --border-radius-sm: 10px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 15px;
+  --border-radius-xl: 20px;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,6 +35,33 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  transition: var(--transition-default);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.2);
 }
 
 a {
@@ -36,7 +87,7 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: var(--border-radius-sm, 8px);
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -44,14 +95,43 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: var(--transition-default, all 0.3s ease);
 }
 button:hover {
   border-color: #646cff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.3);
+}
+button:active {
+  transform: translateY(0);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Glass button variant */
+button.glass {
+  background: var(--glass-bg-primary, rgba(255, 255, 255, 0.1));
+  backdrop-filter: var(--glass-blur, blur(10px));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+  color: #fff;
+}
+
+button.glass:hover {
+  background: var(--glass-bg-secondary, rgba(255, 255, 255, 0.15));
+  border-color: var(--glass-border-strong, rgba(255, 255, 255, 0.3));
+}
+
+/* Input styling */
+input, textarea, select {
+  transition: var(--transition-default, all 0.3s ease);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.4);
+  transform: scale(1.01);
 }
 
 @media (prefers-color-scheme: light) {

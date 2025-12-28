@@ -147,6 +147,7 @@ const MapView: React.FC = () => {
 
             setSpots([...spots, savedSpot]);
             setModalOpen(false);
+            setSpotFormOpen(false); // Close the spot form modal
             setNewSpot(null);
             showToast("Старт успешно добавлен!", "success");
         } catch (err) {
@@ -320,22 +321,9 @@ const MapView: React.FC = () => {
                     border: "1px solid rgba(255,255,255,0.3)",
                 }}
             >
-                {/*<button
-                    style={{
-                        background: "rgba(0,150,255,0.3)",
-                        border: "none",
-                        padding: "10px 15px",
-                        borderRadius: 10,
-                        color: "#fff",
-                        cursor: "pointer",
-                    }}
-                    onClick={handleAddClick}
-                >
-                    Добавить старт
-                </button>*/}
-
                 {/* Settings button */}
                 <button
+                    aria-label="Открыть настройки"
                     style={{
                         background: "rgba(100,100,100,0.3)",
                         border: "none",
@@ -411,6 +399,7 @@ const MapView: React.FC = () => {
 
                 <button
                     onClick={() => setSettingsOpen(false)}
+                    aria-label="Закрыть настройки"
                     style={{
                         marginTop: 10,
                         padding: "10px 20px",
@@ -447,6 +436,7 @@ const MapView: React.FC = () => {
             {/* Layer selector button */}
             <div style={{ position: "absolute", bottom: 20, right: 20, zIndex: 1000 }}>
                 <button
+                    aria-label="Выбрать слой карты"
                     onClick={() => setLayerPopupOpen(!layerPopupOpen)}
                     style={{
                         width: 50,
@@ -507,14 +497,15 @@ const MapView: React.FC = () => {
                                         borderRadius: 8,
                                         overflow: "hidden",
                                         border: "1px solid rgba(0,0,0,0.1)",
+                                        background: 
+                                            layerKey === "standard" 
+                                                ? "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)" 
+                                                : layerKey === "topo" 
+                                                    ? "linear-gradient(135deg, #d4a574 0%, #a8805f 100%)" 
+                                                    : "linear-gradient(135deg, #2d4a2b 0%, #4a7c59 100%)",
                                     }}
-                                >
-                                    <img
-                                        src={`https://maps.wikimedia.org/osm-intl/${layerKey === "standard" ? "0/0/0.png" : layerKey === "topo" ? "0/0/0.png" : "0/0/0.png"}`}
-                                        alt={layers[layerKey].label}
-                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                </div>
+                                    aria-label={`Preview ${layers[layerKey].label}`}
+                                />
                                 <div style={{ flex: 1, fontWeight: 500 }}>{layers[layerKey].label}</div>
                                 {activeLayer === layerKey && <div style={{ color: "#1E90FF", fontSize: 20 }}>✔</div>}
                             </div>

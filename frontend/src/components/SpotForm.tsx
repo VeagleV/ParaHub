@@ -27,6 +27,19 @@ export default function SpotForm({ initialSpot, onSubmit }: SpotFormProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(formData);
+        // Reset form after submission
+        setFormData({
+            name: "",
+            latitude: initialSpot?.latitude || 0,
+            longitude: initialSpot?.longitude || 0,
+            elevation: 0,
+            description: "",
+            suitableWinds: "",
+            xcDifficulty: 1,
+            learningDifficulty: 1,
+            accessibility: "",
+            popularity: "",
+        });
     };
 
     return (

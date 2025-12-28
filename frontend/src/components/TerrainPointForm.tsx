@@ -54,6 +54,17 @@ export default function TerrainPointForm({
         e.preventDefault();
         if (!formData.name) return; // simple guard
         onSubmit(formData);
+        // Reset form after submission
+        setFormData({
+            name: "",
+            type: "BEACON",
+            latitude: initialData?.latitude ?? 0,
+            longitude: initialData?.longitude ?? 0,
+            elevation: 0,
+            description: "",
+        });
+        // Close the form
+        onCancel();
     };
 
     return (
