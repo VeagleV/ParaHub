@@ -53,7 +53,7 @@ export default function TerrainPointForm({
     // Auto-fill elevation when form opens
     useEffect(() => {
         const autoFillData = async () => {
-            if (!initialData?.latitude || !initialData?.longitude || !fetchElevation) return;
+            if (initialData?.latitude == null || initialData?.longitude == null || !fetchElevation) return;
             
             if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
                 const elevation = await fetchElevation(initialData.latitude, initialData.longitude);

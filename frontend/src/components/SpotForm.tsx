@@ -29,7 +29,7 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
     // Auto-fill elevation when form opens
     useEffect(() => {
         const autoFillData = async () => {
-            if (!initialSpot?.latitude || !initialSpot?.longitude || !fetchElevation) return;
+            if (initialSpot?.latitude == null || initialSpot?.longitude == null || !fetchElevation) return;
             
             if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
                 const elevation = await fetchElevation(initialSpot.latitude, initialSpot.longitude);

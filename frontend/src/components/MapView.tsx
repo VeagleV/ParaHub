@@ -23,14 +23,20 @@ import TerrainPointForm from "./TerrainPointForm.tsx";
 L.Icon.Default.mergeOptions({ iconUrl, shadowUrl });
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
+// Constants
+const ELEVATION_API_TIMEOUT = 10000; // 10 seconds
+
+// SVG for terrain point marker icon (green)
+const TERRAIN_POINT_SVG = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
+        <path fill="#2ecc71" stroke="#fff" stroke-width="2" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z"/>
+        <circle cx="12.5" cy="12.5" r="6" fill="#fff"/>
+    </svg>
+`;
+
 // Create custom icon for terrain points
 const terrainPointIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
-            <path fill="#2ecc71" stroke="#fff" stroke-width="2" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z"/>
-            <circle cx="12.5" cy="12.5" r="6" fill="#fff"/>
-        </svg>
-    `),
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(TERRAIN_POINT_SVG),
     shadowUrl,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -182,8 +188,12 @@ const MapView: React.FC = () => {
     };
 
     // Helper function to get tile coordinates from lat/lng
+    // Uses Web Mercator projection (EPSG:3857) to convert geographic coordinates
+    // to tile coordinates in the XYZ tile scheme used by most web map services
     const getTileCoords = (lat: number, lng: number, zoom: number) => {
+        // X coordinate: simple linear mapping from longitude
         const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
+        // Y coordinate: inverse Mercator projection for latitude
         const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
         return { x, y, z: zoom };
     };
@@ -249,7 +259,7 @@ const MapView: React.FC = () => {
     const fetchElevationForPosition = async (lat: number, lng: number): Promise<number | null> => {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), ELEVATION_API_TIMEOUT);
             
             const res = await fetch(
                 `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`,
