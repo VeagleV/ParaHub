@@ -8,6 +8,8 @@ interface TerrainPointFormProps {
     spots?: Spot[];
     onSubmit: (tp: TerrainPoint & { spotId?: number }) => void;
     onCancel: () => void;
+    autoFillMode?: 'coords-elevation' | 'elevation' | 'none';
+    fetchElevation?: (lat: number, lng: number) => Promise<number | null>;
 }
 
 const TERRAIN_TYPES = [
@@ -22,6 +24,8 @@ export default function TerrainPointForm({
                                              spots = [],
                                              onSubmit,
                                              onCancel,
+                                             autoFillMode = 'none',
+                                             fetchElevation,
                                          }: TerrainPointFormProps) {
     const [formData, setFormData] = useState<TerrainPoint & { spotId?: number }>({
         name: initialData?.name || "",
@@ -45,6 +49,21 @@ export default function TerrainPointForm({
             description: initialData.description ?? prev.description,
         }));
     }, [initialData]);
+
+    // Auto-fill elevation when form opens
+    useEffect(() => {
+        const autoFillData = async () => {
+            if (!initialData?.latitude || !initialData?.longitude || !fetchElevation) return;
+            
+            if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
+                const elevation = await fetchElevation(initialData.latitude, initialData.longitude);
+                if (elevation !== null) {
+                    setFormData(prev => ({ ...prev, elevation }));
+                }
+            }
+        };
+        autoFillData();
+    }, [initialData?.latitude, initialData?.longitude, autoFillMode, fetchElevation]);
 
     const handleChange = (field: keyof TerrainPoint | "spotId", value: any) => {
         setFormData((s) => ({ ...s, [field]: value }));
