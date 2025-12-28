@@ -47,9 +47,9 @@ public class ProfilingAspect {
     }
 
     /**
-     * Профилирование методов в @Component (Mappers)
+     * Profiling for mapper methods
      */
-    @Around("@within(org.springframework.stereotype.Component) && execution(* org.bin.parahub.mapper..*(..))")
+    @Around("execution(* org.bin.parahub.mapper..*(..))")
     public Object profileMapperMethods(ProceedingJoinPoint joinPoint) throws Throwable {
         return profileMethod(joinPoint, false, false, 50);
     }
@@ -60,7 +60,7 @@ public class ProfilingAspect {
         String methodName = signature.getName();
         String fullMethodName = className + "#" + methodName;
 
-        // Логируем начало выполнения
+        // Log method start
         if (logArgs) {
             Object[] args = joinPoint.getArgs();
             String argsStr = args.length > 0 ? Arrays.toString(args) : "[]";
@@ -75,14 +75,13 @@ public class ProfilingAspect {
 
         try {
             result = joinPoint.proceed();
-            return result;
         } catch (Throwable e) {
             exception = e;
             throw e;
         } finally {
             long executionTime = System.currentTimeMillis() - startTime;
 
-            // Логируем результат
+            // Log execution result
             if (exception != null) {
                 logBoth(String.format("✗ [%s] FAILED in %d ms - Exception: %s", 
                     fullMethodName, executionTime, exception.getClass().getSimpleName()));
@@ -99,6 +98,8 @@ public class ProfilingAspect {
                 }
             }
         }
+        
+        return result;
     }
 
     /**

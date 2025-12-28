@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+const MAX_PERFORMANCE_ENTRIES = 100;
+
 interface PerformanceEntry {
     name: string;
     duration: number;
@@ -22,15 +24,15 @@ class PerformanceTracker {
     addEntry(entry: PerformanceEntry) {
         this.entries.push(entry);
         
-        // Логируем в консоль
+        // Log to console
         const emoji = entry.duration < 50 ? '✅' : entry.duration < 100 ? '⚠️' : '🔴';
         console.log(`${emoji} [${entry.type}] ${entry.name}: ${entry.duration.toFixed(2)}ms`);
         
-        // Уведомляем слушателей
+        // Notify listeners
         this.listeners.forEach(listener => listener([...this.entries]));
         
-        // Храним только последние 100 записей
-        if (this.entries.length > 100) {
+        // Keep only the last MAX_PERFORMANCE_ENTRIES entries
+        if (this.entries.length > MAX_PERFORMANCE_ENTRIES) {
             this.entries.shift();
         }
     }
@@ -62,7 +64,7 @@ export const usePerformance = (componentName: string, enabled: boolean = true) =
         renderCountRef.current++;
         const renderTime = performance.now() - renderStartRef.current;
 
-        if (renderCountRef.current > 1) { // Пропускаем первый рендер
+        if (renderCountRef.current > 1) { // Skip first render
             PerformanceTracker.getInstance().addEntry({
                 name: componentName,
                 duration: renderTime,

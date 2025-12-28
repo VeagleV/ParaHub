@@ -19,7 +19,7 @@ export const PerformanceMonitor: React.FC = () => {
         return unsubscribe;
     }, []);
 
-    // Группируем по имени и берем среднее
+    // Group by name and calculate averages
     const aggregated = entries.reduce((acc, entry) => {
         if (!acc[entry.name]) {
             acc[entry.name] = { count: 0, total: 0, type: entry.type, lastDuration: 0 };
