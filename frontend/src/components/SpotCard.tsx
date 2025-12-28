@@ -60,13 +60,13 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, isShowingR
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>Elevation:</strong> <span>{spot.elevation ?? 'N/A'} m</span>
+                    <strong>Elevation:</strong> <span>{spot.elevation ?? 'не указано'} m</span>
                 </p>
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>XC difficulty:</strong> <span>{spot.xcDifficulty ?? 'N/A'}</span>
+                    <strong>XC difficulty:</strong> <span>{spot.xcDifficulty ?? 'не указано'}</span>
                 </p>
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>Learning:</strong> <span>{spot.learningDifficulty ?? 'N/A'}</span>
+                    <strong>Learning:</strong> <span>{spot.learningDifficulty ?? 'не указано'}</span>
                 </p>
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
                     <strong>Accessibility:</strong> <span>{spot.accessibility || 'не указано'}</span>
@@ -85,9 +85,9 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, isShowingR
                         flexWrap: 'wrap',
                         gap: 6,
                     }}>
-                        {parseWindDirections(spot.suitableWinds).map((wind, idx) => (
+                        {parseWindDirections(spot.suitableWinds).map((wind) => (
                             <div
-                                key={idx}
+                                key={wind}
                                 style={{
                                     padding: '6px 12px',
                                     background: getWindColor(wind),
