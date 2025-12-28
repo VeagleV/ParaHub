@@ -21,9 +21,11 @@ import java.util.ArrayList;
 public class SpotMapper {
 
     private final TerrainPointMapper terrainPointMapper;
+    private final WindMapper windMapper;
 
-    public SpotMapper(TerrainPointMapper terrainPointMapper) {
+    public SpotMapper(TerrainPointMapper terrainPointMapper, WindMapper windMapper) {
         this.terrainPointMapper = terrainPointMapper;
+        this.windMapper = windMapper;
     }
 
 
@@ -44,6 +46,7 @@ public class SpotMapper {
         spotDTO.setPopularity(spot.getPopularity());
         spotDTO.setBestSeason(spot.getBestSeason());
         spotDTO.setTerrainPoints(terrainPointMapper.toDTOList(spot.getTerrainPoints()));
+        spotDTO.setWinds(windMapper.toDTOList(spot.getWinds()));
 
         return spotDTO;
     }
@@ -73,6 +76,9 @@ public class SpotMapper {
              spotEntity.setTerrainPoints(new ArrayList<TerrainPoint>());
          } else {
              spotEntity.setTerrainPoints(terrainPointMapper.toEntityList(spotDTO.getTerrainPoints()));
+         }
+         if (spotDTO.getWinds() != null) {
+             spotEntity.setWinds(windMapper.toEntityList(spotDTO.getWinds()));
          }
          return spotEntity;
     }

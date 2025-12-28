@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import type { Spot } from "../types/Spot";
+import type { Spot, Wind } from "../types/Spot";
+import DifficultyBadge, { DIFFICULTY_CONFIG } from './DifficultyBadge';
+import { WIND_ARROWS } from './WindChips';
 
 interface SpotFormProps {
     initialSpot?: Partial<Spot>;
@@ -8,7 +10,19 @@ interface SpotFormProps {
     fetchElevation?: (lat: number, lng: number) => Promise<number | null>;
 }
 
+const DIRECTIONS = [
+    { code: 'N' as const, label: 'Север', arrow: '↑' },
+    { code: 'NE' as const, label: 'Северо-Восток', arrow: '↗' },
+    { code: 'E' as const, label: 'Восток', arrow: '→' },
+    { code: 'SE' as const, label: 'Юго-Восток', arrow: '↘' },
+    { code: 'S' as const, label: 'Юг', arrow: '↓' },
+    { code: 'SW' as const, label: 'Юго-Запад', arrow: '↙' },
+    { code: 'W' as const, label: 'Запад', arrow: '←' },
+    { code: 'NW' as const, label: 'Северо-Запад', arrow: '↖' }
+];
+
 export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none', fetchElevation }: SpotFormProps) {
+    const [winds, setWinds] = useState<Wind[]>(initialSpot?.winds || []);
     const [formData, setFormData] = useState<Spot>({
         name: initialSpot?.name || "",
         // Координаты заполняются только если режим 'coords-elevation'
@@ -59,7 +73,7 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+        onSubmit({ ...formData, winds });
         // Reset form after submission - respect autoFillMode
         setFormData({
             name: "",
@@ -77,6 +91,7 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
             accessibility: "",
             popularity: "",
         });
+        setWinds([]);
     };
 
     // Shared input style
@@ -208,24 +223,86 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                 />
             </div>
 
-            {/* Suitable Winds */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* Wind Management Section */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <label style={labelStyle}>Подходящие ветра</label>
-                <input
-                    type="text"
-                    placeholder="например: С, СВ"
-                    value={formData.suitableWinds}
-                    onChange={(e) => handleChange("suitableWinds", e.target.value)}
-                    style={inputStyle}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                />
+                
+                {DIRECTIONS.map(dir => {
+                    const wind = winds.find(w => w.direction === dir.code);
+                    const isActive = !!wind;
+                    
+                    return (
+                        <div key={dir.code} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 12,
+                            padding: 8,
+                            borderRadius: 8,
+                            background: isActive ? 'rgba(46,204,113,0.1)' : 'transparent'
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={isActive}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setWinds([...winds, { direction: dir.code, minSpeed: 3, maxSpeed: 10 }]);
+                                    } else {
+                                        setWinds(winds.filter(w => w.direction !== dir.code));
+                                    }
+                                }}
+                                style={{ width: 18, height: 18, cursor: 'pointer' }}
+                            />
+                            
+                            <span style={{ fontSize: 18 }}>{dir.arrow}</span>
+                            <span style={{ fontSize: 14, fontWeight: 500, minWidth: 120 }}>
+                                {dir.label}
+                            </span>
+                            
+                            {isActive && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={30}
+                                        value={wind!.minSpeed}
+                                        onChange={(e) => {
+                                            setWinds(winds.map(w => 
+                                                w.direction === dir.code 
+                                                    ? { ...w, minSpeed: parseInt(e.target.value) || 0 } 
+                                                    : w
+                                            ));
+                                        }}
+                                        style={{ width: 50, padding: 4, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(255,255,255,0.2)' }}
+                                    />
+                                    <span>—</span>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={30}
+                                        value={wind!.maxSpeed}
+                                        onChange={(e) => {
+                                            setWinds(winds.map(w => 
+                                                w.direction === dir.code 
+                                                    ? { ...w, maxSpeed: parseInt(e.target.value) || 0 } 
+                                                    : w
+                                            ));
+                                        }}
+                                        style={{ width: 50, padding: 4, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(255,255,255,0.2)' }}
+                                    />
+                                    <span style={{ fontSize: 12 }}>м/с</span>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Difficulty */}
             {/* XC Difficulty */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <label style={labelStyle}>Сложность маршрутных полётов ({formData.xcDifficulty})</label>
+                <label style={labelStyle}>
+                    Сложность маршрутных полётов: <DifficultyBadge level={formData.xcDifficulty || 1} />
+                </label>
                 <input
                     type="range"
                     min={1}
@@ -234,21 +311,24 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                     onChange={(e) => handleChange("xcDifficulty", parseInt(e.target.value))}
                     style={{ 
                         width: "100%",
-                        accentColor: "rgba(30,144,255,0.8)",
-                        height: 6,
+                        accentColor: DIFFICULTY_CONFIG[formData.xcDifficulty as keyof typeof DIFFICULTY_CONFIG]?.color || '#f39c12',
+                        height: 8,
                         cursor: "pointer",
                     }}
                 />
-                <div style={{display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7}}>
-                    <span>Легко</span>
-                    <span>Сложно</span>
+                <div style={{display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.7}}>
+                    <span>🟢 Новичок</span>
+                    <span>🔵 Лёгкий</span>
+                    <span>🟡 Средний</span>
+                    <span>🟠 Сложный</span>
+                    <span>🔴 Эксперт</span>
                 </div>
             </div>
 
             {/* Learning Difficulty */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <label style={labelStyle}>
-                    Сложность для обучения ({formData.learningDifficulty})
+                    Сложность для обучения: <DifficultyBadge level={formData.learningDifficulty || 1} />
                 </label>
                 <input
                     type="range"
@@ -260,14 +340,17 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                     }
                     style={{ 
                         width: "100%",
-                        accentColor: "rgba(30,144,255,0.8)",
-                        height: 6,
+                        accentColor: DIFFICULTY_CONFIG[formData.learningDifficulty as keyof typeof DIFFICULTY_CONFIG]?.color || '#f39c12',
+                        height: 8,
                         cursor: "pointer",
                     }}
                 />
-                <div style={{display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7}}>
-                    <span>Легко</span>
-                    <span>Сложно</span>
+                <div style={{display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.7}}>
+                    <span>🟢 Новичок</span>
+                    <span>🔵 Лёгкий</span>
+                    <span>🟡 Средний</span>
+                    <span>🟠 Сложный</span>
+                    <span>🔴 Эксперт</span>
                 </div>
             </div>
 

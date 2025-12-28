@@ -64,6 +64,17 @@ public class SpotService {
     @Transactional
     public SpotDTO save(SpotDTO spotDTO) {
         Spot spot = spotMapper.toEntity(spotDTO);
+        
+        // Связываем ветры со спотом
+        if (spot.getWinds() != null) {
+            spot.getWinds().forEach(wind -> wind.setSpot(spot));
+        }
+        
+        // Связываем точки местности со спотом
+        if (spot.getTerrainPoints() != null) {
+            spot.getTerrainPoints().forEach(point -> point.setSpot(spot));
+        }
+        
         Spot saved = spotRepository.save(spot);
         return spotMapper.toDTO(saved);
     }
@@ -92,6 +103,20 @@ public class SpotService {
         existingSpot.setPopularity(spotDTO.getPopularity());
         existingSpot.setBestSeason(spotDTO.getBestSeason());
         existingSpot.setTerrainPoints(terrainPointMapper.toEntityList(spotDTO.getTerrainPoints()));
+        
+        // Update winds
+        existingSpot.getWinds().clear();
+        if (spotDTO.getWinds() != null) {
+            spotDTO.getWinds().forEach(windDTO -> {
+                var wind = new org.bin.parahub.entity.Wind();
+                wind.setDirection(windDTO.getDirection());
+                wind.setMinSpeed(windDTO.getMinSpeed());
+                wind.setMaxSpeed(windDTO.getMaxSpeed());
+                wind.setSpot(existingSpot);
+                existingSpot.getWinds().add(wind);
+            });
+        }
+        
         Spot saved = spotRepository.save(existingSpot);
 
         return spotMapper.toDTO(saved);
