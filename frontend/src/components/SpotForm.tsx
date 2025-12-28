@@ -11,9 +11,14 @@ interface SpotFormProps {
 export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none', fetchElevation }: SpotFormProps) {
     const [formData, setFormData] = useState<Spot>({
         name: initialSpot?.name || "",
-        latitude: initialSpot?.latitude ?? 0,
-        longitude: initialSpot?.longitude ?? 0,
-        elevation: initialSpot?.elevation ?? 0,
+        // Координаты заполняются только если режим 'coords-elevation'
+        latitude: (autoFillMode === 'coords-elevation' && initialSpot?.latitude != null) 
+            ? initialSpot.latitude 
+            : 0,
+        longitude: (autoFillMode === 'coords-elevation' && initialSpot?.longitude != null) 
+            ? initialSpot.longitude 
+            : 0,
+        elevation: 0, // Будет заполнено в useEffect
         description: initialSpot?.description || "",
         suitableWinds: initialSpot?.suitableWinds || "",
         xcDifficulty: initialSpot?.xcDifficulty ?? 1,
@@ -31,12 +36,23 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
         const autoFillData = async () => {
             if (initialSpot?.latitude == null || initialSpot?.longitude == null || !fetchElevation) return;
             
-            if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
+            if (autoFillMode === 'coords-elevation') {
+                // Заполнить координаты и высоту
+                const elevation = await fetchElevation(initialSpot.latitude, initialSpot.longitude);
+                setFormData(prev => ({ 
+                    ...prev, 
+                    latitude: initialSpot.latitude!,
+                    longitude: initialSpot.longitude!,
+                    elevation: elevation ?? 0 
+                }));
+            } else if (autoFillMode === 'elevation') {
+                // Только высота
                 const elevation = await fetchElevation(initialSpot.latitude, initialSpot.longitude);
                 if (elevation !== null) {
                     setFormData(prev => ({ ...prev, elevation }));
                 }
             }
+            // autoFillMode === 'none' - ничего не заполняем
         };
         autoFillData();
     }, [initialSpot?.latitude, initialSpot?.longitude, autoFillMode, fetchElevation]);
@@ -44,11 +60,15 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(formData);
-        // Reset form after submission
+        // Reset form after submission - respect autoFillMode
         setFormData({
             name: "",
-            latitude: initialSpot?.latitude ?? 0,
-            longitude: initialSpot?.longitude ?? 0,
+            latitude: (autoFillMode === 'coords-elevation' && initialSpot?.latitude != null) 
+                ? initialSpot.latitude 
+                : 0,
+            longitude: (autoFillMode === 'coords-elevation' && initialSpot?.longitude != null) 
+                ? initialSpot.longitude 
+                : 0,
             elevation: 0,
             description: "",
             suitableWinds: "",
@@ -131,18 +151,32 @@ export default function SpotForm({ initialSpot, onSubmit, autoFillMode = 'none',
                     <label style={labelStyle}>Широта</label>
                     <input
                         type="number"
+                        step="any"
                         value={formData.latitude}
-                        readOnly
-                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("latitude", isNaN(parsed) ? 0 : parsed);
+                        }}
+                        style={inputStyle}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder="Широта"
                     />
                 </div>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                     <label style={labelStyle}>Долгота</label>
                     <input
                         type="number"
+                        step="any"
                         value={formData.longitude}
-                        readOnly
-                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("longitude", isNaN(parsed) ? 0 : parsed);
+                        }}
+                        style={inputStyle}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder="Долгота"
                     />
                 </div>
             </div>

@@ -30,9 +30,13 @@ export default function TerrainPointForm({
     const [formData, setFormData] = useState<TerrainPoint & { spotId?: number }>({
         name: initialData?.name || "",
         type: (initialData?.type as string) || "BEACON",
-        latitude: initialData?.latitude ?? 0,
-        longitude: initialData?.longitude ?? 0,
-        elevation: initialData?.elevation ?? 0,
+        latitude: (autoFillMode === 'coords-elevation' && initialData?.latitude != null) 
+            ? initialData.latitude 
+            : 0,
+        longitude: (autoFillMode === 'coords-elevation' && initialData?.longitude != null) 
+            ? initialData.longitude 
+            : 0,
+        elevation: 0,
         description: initialData?.description || "",
         // spotId optional
     });
@@ -44,18 +48,31 @@ export default function TerrainPointForm({
             ...prev,
             name: initialData.name ?? prev.name,
             type: (initialData.type as string) ?? prev.type,
-            latitude: initialData.latitude ?? prev.latitude,
-            longitude: initialData.longitude ?? prev.longitude,
+            // Only update coordinates if autoFillMode allows it
+            latitude: (autoFillMode === 'coords-elevation' && initialData.latitude != null) 
+                ? initialData.latitude 
+                : prev.latitude,
+            longitude: (autoFillMode === 'coords-elevation' && initialData.longitude != null) 
+                ? initialData.longitude 
+                : prev.longitude,
             description: initialData.description ?? prev.description,
         }));
-    }, [initialData]);
+    }, [initialData, autoFillMode]);
 
     // Auto-fill elevation when form opens
     useEffect(() => {
         const autoFillData = async () => {
             if (initialData?.latitude == null || initialData?.longitude == null || !fetchElevation) return;
             
-            if (autoFillMode === 'coords-elevation' || autoFillMode === 'elevation') {
+            if (autoFillMode === 'coords-elevation') {
+                const elevation = await fetchElevation(initialData.latitude, initialData.longitude);
+                setFormData(prev => ({ 
+                    ...prev, 
+                    latitude: initialData.latitude!,
+                    longitude: initialData.longitude!,
+                    elevation: elevation ?? 0 
+                }));
+            } else if (autoFillMode === 'elevation') {
                 const elevation = await fetchElevation(initialData.latitude, initialData.longitude);
                 if (elevation !== null) {
                     setFormData(prev => ({ ...prev, elevation }));
@@ -73,12 +90,16 @@ export default function TerrainPointForm({
         e.preventDefault();
         if (!formData.name) return; // simple guard
         onSubmit(formData);
-        // Reset form after submission
+        // Reset form after submission - respect autoFillMode
         setFormData({
             name: "",
             type: "BEACON",
-            latitude: initialData?.latitude ?? 0,
-            longitude: initialData?.longitude ?? 0,
+            latitude: (autoFillMode === 'coords-elevation' && initialData?.latitude != null) 
+                ? initialData.latitude 
+                : 0,
+            longitude: (autoFillMode === 'coords-elevation' && initialData?.longitude != null) 
+                ? initialData.longitude 
+                : 0,
             elevation: 0,
             description: "",
         });
@@ -137,17 +158,33 @@ export default function TerrainPointForm({
                 <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 14, fontWeight: 600 }}>Широта</label>
                     <input 
-                        value={formData.latitude} 
-                        readOnly 
-                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}} 
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("latitude", isNaN(parsed) ? 0 : parsed);
+                        }}
+                        style={inputStyle}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder="Широта"
                     />
                 </div>
                 <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 14, fontWeight: 600 }}>Долгота</label>
                     <input 
-                        value={formData.longitude} 
-                        readOnly 
-                        style={{...inputStyle, background: "rgba(200,200,200,0.5)", cursor: "not-allowed"}} 
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            handleChange("longitude", isNaN(parsed) ? 0 : parsed);
+                        }}
+                        style={inputStyle}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder="Долгота"
                     />
                 </div>
             </div>
