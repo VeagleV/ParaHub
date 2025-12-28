@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
     MapContainer,
     TileLayer,
@@ -126,7 +126,10 @@ const MapView: React.FC = () => {
     const [elevationEnabled, setElevationEnabled] = useState(false);
     const [autoFillMode, setAutoFillMode] = useState<'coords-elevation' | 'elevation' | 'none'>(() => {
         const saved = localStorage.getItem('autoFillMode');
-        return (saved as 'coords-elevation' | 'elevation' | 'none') || 'none';
+        if (saved === 'coords-elevation' || saved === 'elevation' || saved === 'none') {
+            return saved;
+        }
+        return 'none';
     });
 
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -185,19 +188,29 @@ const MapView: React.FC = () => {
         return { x, y, z: zoom };
     };
 
-    // Helper function to get tile URL for preview
-    const getTilePreviewUrl = (layerKey: LayerType) => {
-        const previewZoom = Math.min(mapCenter.zoom, 8); // Use current zoom or max 8 for preview
+    // Memoize tile preview URLs to avoid recalculating on every render
+    const tilePreviewUrls = useMemo(() => {
+        const previewZoom = Math.min(mapCenter.zoom, 8);
         const { x, y, z } = getTileCoords(mapCenter.lat, mapCenter.lng, previewZoom);
         
-        let url = layers[layerKey].url;
-        url = url.replace('{z}', z.toString());
-        url = url.replace('{x}', x.toString());
-        url = url.replace('{y}', y.toString());
-        url = url.replace('{s}', 'a'); // Use 'a' as the subdomain
-        
-        return url;
-    };
+        return {
+            standard: layers.standard.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+            topo: layers.topo.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+            satellite: layers.satellite.url
+                .replace('{z}', z.toString())
+                .replace('{x}', x.toString())
+                .replace('{y}', y.toString())
+                .replace('{s}', 'a'),
+        };
+    }, [mapCenter.lat, mapCenter.lng, mapCenter.zoom]);
 
     const handleSpotSave = async (data: Spot) => {
 
@@ -235,15 +248,34 @@ const MapView: React.FC = () => {
 
     const fetchElevationForPosition = async (lat: number, lng: number): Promise<number | null> => {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
             const res = await fetch(
-                `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`
+                `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`,
+                { signal: controller.signal }
             );
+            
+            clearTimeout(timeoutId);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
             const data = await res.json();
             if (data.results && data.results.length > 0) {
                 return Math.round(data.results[0].elevation);
             }
         } catch (err) {
-            console.error("Elevation fetch error:", err);
+            if (err instanceof Error) {
+                if (err.name === 'AbortError') {
+                    console.error("Elevation fetch timeout");
+                    showToast("Timeout получения высоты", "error");
+                } else {
+                    console.error("Elevation fetch error:", err);
+                    showToast("Ошибка получения высоты", "error");
+                }
+            }
         }
         return null;
     };
@@ -773,7 +805,7 @@ const MapView: React.FC = () => {
                                         borderRadius: 8,
                                         overflow: "hidden",
                                         border: "1px solid rgba(0,0,0,0.1)",
-                                        backgroundImage: `url(${getTilePreviewUrl(layerKey)})`,
+                                        backgroundImage: `url(${tilePreviewUrls[layerKey]})`,
                                         backgroundSize: "cover",
                                         backgroundPosition: "center",
                                     }}
