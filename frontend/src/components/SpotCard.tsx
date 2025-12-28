@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Spot } from '../types/Spot';
 import type { TerrainPoint } from '../types/TerrainPoint';
+import DifficultyBadge from './DifficultyBadge';
+import WindChips from './WindChips';
 
 interface SpotCardProps {
     spot: Spot;
@@ -62,11 +64,13 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, isShowingR
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
                     <strong>Elevation:</strong> <span>{spot.elevation ?? 'не указано'} m</span>
                 </p>
-                <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>XC difficulty:</strong> <span>{spot.xcDifficulty ?? 'не указано'}</span>
+                <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong>XC сложность:</strong> 
+                    {spot.xcDifficulty ? <DifficultyBadge level={spot.xcDifficulty} /> : '—'}
                 </p>
-                <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
-                    <strong>Learning:</strong> <span>{spot.learningDifficulty ?? 'не указано'}</span>
+                <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong>Обучение:</strong> 
+                    {spot.learningDifficulty ? <DifficultyBadge level={spot.learningDifficulty} /> : '—'}
                 </p>
                 <p style={{ margin: 0, fontSize: 14, display: 'flex', justifyContent: 'space-between' }}>
                     <strong>Accessibility:</strong> <span>{spot.accessibility || 'не указано'}</span>
@@ -76,38 +80,13 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onAddTerrainPoint, isShowingR
                 </p>
             </div>
 
-            {/* Wind directions visualization */}
-            {spot.suitableWinds && (
-                <div style={{ marginBottom: 12 }}>
-                    <strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>Подходящие ветра:</strong>
-                    <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                    }}>
-                        {parseWindDirections(spot.suitableWinds).map((wind) => (
-                            <div
-                                key={wind}
-                                style={{
-                                    padding: '6px 12px',
-                                    background: getWindColor(wind),
-                                    borderRadius: 8,
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    color: '#fff',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 4,
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                }}
-                            >
-                                {getWindIcon(wind)}
-                                <span>{wind}</span>
-                            </div>
-                        ))}
-                    </div>
+            {/* Wind directions visualization using new Wind entity */}
+            <div style={{ margin: '8px 0' }}>
+                <strong style={{ fontSize: 14 }}>Ветра:</strong>
+                <div style={{ marginTop: 6 }}>
+                    <WindChips winds={spot.winds || []} />
                 </div>
-            )}
+            </div>
             
             {spot.description && (
                 <p style={{ 

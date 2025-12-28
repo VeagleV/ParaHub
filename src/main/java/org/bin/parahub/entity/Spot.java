@@ -2,6 +2,7 @@ package org.bin.parahub.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.bin.parahub.enums.PointType;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
  * Класс описывающий парапланерный старт
  */
 @Data
+@ToString(exclude = {"terrainPoints", "winds"})
 @Entity
 @Table(name = "Spots")
 public class Spot {
@@ -55,5 +57,7 @@ public class Spot {
     @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TerrainPoint> terrainPoints = new ArrayList<>();
 
+    @OneToMany(mappedBy = "spot", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Wind> winds = new ArrayList<>();
 
 }

@@ -3,6 +3,7 @@ package org.bin.parahub.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.ToString;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,6 +60,8 @@ public class SpotDTO {
     private String bestSeason;
 
     private String accessibility;
+
+    private List<WindDTO> winds = new ArrayList<>();
 
     private List<TerrainPointDTO> terrainPoints;
 }
