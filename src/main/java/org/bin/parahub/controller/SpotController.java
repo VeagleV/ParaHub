@@ -7,6 +7,7 @@ import org.bin.parahub.dto.SpotDTO;
 import org.bin.parahub.service.SpotService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,18 +53,21 @@ public class SpotController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SpotDTO> createSpot(@Valid @RequestBody SpotDTO spot) {
         SpotDTO savedSpotDTO = spotService.save(spot);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedSpotDTO);
     }
 
     @PutMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SpotDTO> updateSpot(@PathVariable long id,@Valid @RequestBody SpotDTO spotDTO) {
         SpotDTO updatedSpotDTO = spotService.updateSpot(id, spotDTO);
         return ResponseEntity.status(HttpStatus.OK).body(updatedSpotDTO);
     }
 
     @DeleteMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteSpot(@PathVariable long id) {
         spotService.deleteSpotById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

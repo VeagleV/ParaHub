@@ -8,6 +8,7 @@ import org.bin.parahub.entity.TerrainPoint;
 import org.bin.parahub.service.TerrainPointService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -44,30 +45,35 @@ public class TerrainPointController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TerrainPointDTO> createTerrainPoint(@Valid @RequestBody TerrainPointDTO terrainPointDTO){
         TerrainPointDTO saved = terrainPointService.save(terrainPointDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PostMapping("/spotName/{spotName}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TerrainPointDTO> createTerrainPointInSpot(@Valid @RequestBody TerrainPointDTO terrainPointDTO, @PathVariable String spotName){
         TerrainPointDTO saved = terrainPointService.saveWithSpotName(terrainPointDTO, spotName);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PostMapping("/spotID/{spotID}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TerrainPointDTO> createTerrainPointInSpotID(@Valid @RequestBody TerrainPointDTO terrainPointDTO, @PathVariable long spotID){
         TerrainPointDTO saved = terrainPointService.saveWithSpotID(terrainPointDTO, spotID);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @DeleteMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTerrainPoint(@PathVariable Long id){
         terrainPointService.deleteTerrainPointByID(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @DeleteMapping("/spotID/{spotID}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTerrainPointsBySpotID(@PathVariable long spotID){
         terrainPointService.deleteTerrainPointsBySpotID(spotID);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
