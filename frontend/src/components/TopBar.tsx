@@ -1,38 +1,110 @@
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+
+const linkStyle = {
+    color: "#fff",
+    textDecoration: "none",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    fontWeight: 500,
+    fontSize: "1.07rem"
+};
+
+const activeStyle = {
+    background: "rgba(0,0,0,0.13)"
+};
 
 const TopBar: React.FC = () => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
+    const location = useLocation();
 
     return (
         <header style={{
-        display: "flex", alignItems: "center", gap: 16,
-            background: "#f0f0f0", padding: "12px 24px",
-            borderBottom: "1px solid #ddd"
-    }}>
-    <Link to="/" style={{ fontWeight: "bold", fontSize: 20 }}>ParaHub</Link>
-    <nav style={{ display: "flex", gap: 14, flex: 1 }}>
-    <Link to="/">Главная</Link>
-    {user && <Link to="/profile">Профиль</Link>}
-        {user && <Link to="/map">Карта</Link>}
-            {user && user.role === "ADMIN" && <Link to="/admin">Панель админа</Link>}
-            </nav>
-                {!user &&
-                <>
-                    <Link to="/login">Войти</Link>
-                    <Link to="/register">Регистрация</Link>
-                    </>
-                }
-                {user && (
-                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ color: "#666" }}>{user.username} [{user.role}]</span>
-                <button onClick={() => { logout(); navigate("/"); }}>Выйти</button>
-                </span>
-                )}
-                </header>
-            );
-            };
+            background: 'rgba(30,30,36,0.55)',
+            borderBottom: '1px solid rgba(200,200,200,0.16)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+            backdropFilter: 'blur(10px)',
+        }}>
+            <nav style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                height: '58px', maxWidth: 1000, margin: '0 auto', padding: '0 24px',
+            }}>
+                <Link to="/" style={{
+                    fontWeight: "bold", fontSize: "1.5rem", color: "#fff"
+                }}>ParaHub</Link>
+                <div style={{ display: "flex", gap: "14px" }}>
+                    <Link
+                        to="/"
+                        style={{
+                            ...linkStyle,
+                            ...(location.pathname === "/" ? activeStyle : {})
+                        }}
+                    >Главная</Link>
+                    <Link
+                        to="/map"
+                        style={{
+                            ...linkStyle,
+                            ...(location.pathname === "/map" ? activeStyle : {})
+                        }}
+                    >Карта</Link>
 
-            export default TopBar;
+                    {/* Кнопки для авторизованного пользователя */}
+                    {user && (
+                        <>
+                            <Link
+                                to="/profile"
+                                style={{
+                                    ...linkStyle,
+                                    ...(location.pathname === "/profile" ? activeStyle : {})
+                                }}
+                            >Профиль</Link>
+                            <button
+                                onClick={() => {
+                                    logout();
+                                    navigate("/");
+                                }}
+                                style={{
+                                    background: '#007bff',
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: "8px 16px",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    marginLeft: "8px",
+                                    fontWeight: 500
+                                }}
+                            >Выйти</button>
+                        </>
+                    )}
+
+                    {/* Кнопки для НЕавторизованного пользователя */}
+                    {!user && (
+                        <>
+                            <Link
+                                to="/login"
+                                style={{
+                                    ...linkStyle,
+                                    ...(location.pathname === "/login" ? activeStyle : {})
+                                }}
+                            >Войти</Link>
+                            <Link
+                                to="/register"
+                                style={{
+                                    ...linkStyle,
+                                    ...(location.pathname === "/register" ? activeStyle : {})
+                                }}
+                            >Регистрация</Link>
+                        </>
+                    )}
+                </div>
+            </nav>
+        </header>
+    );
+};
+
+export default TopBar;

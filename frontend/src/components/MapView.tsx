@@ -184,7 +184,7 @@ const MapView: React.FC = () => {
 
     const [spots, setSpots] = useState<Spot[]>([]);
     const [isAdding, setIsAdding] = useState(false);
-    const [hoverPos, setHoverPos] = useState<{ lat: number; lng: number } | null>(null);
+    const [hoverPos] = useState<{ lat: number; lng: number } | null>(null);
     const [newSpot, setNewSpot] = useState<Spot | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);

@@ -1,33 +1,33 @@
-import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
 import TopBar from "./components/TopBar";
+import LandingPage from "./pages/LandingPage";
+import MapPage from "./pages/MapPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import Verify2FAPage from "./pages/Verify2FAPage";
 import ProfilePage from "./pages/ProfilePage";
-
-const LandingPage = () => <div style={{margin: "30px"}}><h1>ParaHub</h1><p>Карта для парапланеристов России</p></div>;
+import { AuthProvider } from "./context/AuthContext"; // Импортируй свой провайдер
 
 function App() {
     return (
-        <BrowserRouter>
-            <AuthProvider>
+        <AuthProvider>
+            <BrowserRouter>
                 <TopBar />
                 <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/verify" element={<Verify2FAPage />} />
-                    <Route path="/profile" element={
+                    <Route path="/map" element={
                         <ProtectedRoute>
-                            <ProfilePage />
+                            <MapPage />
                         </ProtectedRoute>
                     } />
+                    <Route path="/verify" element={<Verify2FAPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                 </Routes>
-            </AuthProvider>
-        </BrowserRouter>
+            </BrowserRouter>
+        </AuthProvider>
     );
 }
 

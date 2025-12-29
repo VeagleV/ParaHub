@@ -2,8 +2,10 @@ package org.bin.parahub;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
+@EnableAsync
 public class ParaHubApplication {
 
 	//netstat -ano | findstr :8080

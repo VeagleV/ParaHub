@@ -1,58 +1,34 @@
-import React, { createContext, useEffect, useState, useCallback } from "react";
-import type {User} from "../types/auth";
-import axios from "axios";
+// context/AuthContext.tsx
+import React, { createContext, useState, useEffect } from "react";
 
-interface AuthContextProps {
-    user: User | null;
-    token: string | null;
-    login: (accessToken: string) => void;
-    logout: () => void;
-    check: () => Promise<void>;
-}
-
-export const AuthContext = createContext<AuthContextProps>({
+export const AuthContext = createContext({
     user: null,
-    token: null,
-    login: () => {},
-    logout: () => {},
-    check: async () => {}
+    setUser: (u:any) => {},
+    logout: () => {}
 });
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem("accessToken"));
+    const [user, setUser] = useState<any>(null);
 
-    const check = useCallback(async () => {
-        if (token) {
-            try {
-                const resp = await axios.get<User>("/api/user/me", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setUser(resp.data);
-            } catch {
-                logout();
+    // Главное: всегда запрашиваем пользователя с /api/user/me при загрузке приложения/страницы
+    useEffect(() => {
+        fetch("/api/user/me", {
+            headers: {
+                Authorization: "Bearer dev" // можно любое значение для dev-режима
             }
-        } else {
-            setUser(null);
-        }
-    }, [token]);
+        })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => setUser(data))
+            .catch(() => setUser(null));
+    }, []);
 
-    useEffect(() => { check(); }, [token]);
-
-    const login = (tok: string) => {
-        localStorage.setItem("accessToken", tok);
-        setToken(tok);
-    };
-
-    const logout = () => {
-        localStorage.removeItem("accessToken");
-        setToken(null);
-        setUser(null);
-    };
+    function logout() {
+        setUser(null); // Просто "выход" — убираем пользователя из context
+    }
 
     return (
-        <AuthContext.Provider value={{user, token, login, logout, check}}>
-    {children}
-    </AuthContext.Provider>
-);
+        <AuthContext.Provider value={{ user, setUser, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

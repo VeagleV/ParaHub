@@ -12,3 +12,6 @@ export const loginRequest2FA = (email: string, password: string) =>
 
 export const login2FA = (email: string, code: string) =>
     axios.post<AuthResponse>("/api/auth/login-2fa", { email, code });
+
+export const resendCode = (email: string, forRegistration?: boolean) =>
+    axios.post("/api/auth/resend", { email, forRegistration });
